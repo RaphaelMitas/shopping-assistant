@@ -1,7 +1,10 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { sendVerifyEmail } from "../actions";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,39 +16,50 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+
+const schema = z.object({
+  email: z.string().email("Please enter a valid email"),
+});
+
+type FormValues = z.infer<typeof schema>;
 
 export default function VerifyEmailPage() {
   const searchParams = useSearchParams();
   const initialEmail = useMemo(() => searchParams.get("email") ?? "", [searchParams]);
-  const [email, setEmail] = useState<string>(initialEmail);
   const [status, setStatus] = useState<string | undefined>(undefined);
-  const [error, setError] = useState<string | undefined>(undefined);
-  const [loading, setLoading] = useState(false);
+  const [submitError, setSubmitError] = useState<string | undefined>(undefined);
 
-  const onResend = useCallback(async () => {
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { email: initialEmail },
+    mode: "onSubmit",
+  });
+
+  const onResend = async (values: FormValues) => {
     setStatus(undefined);
-    setError(undefined);
-    if (!email) {
-      setError("Please enter your email");
-      return;
-    }
-    setLoading(true);
+    setSubmitError(undefined);
     try {
-      const result = await sendVerifyEmail({ email });
+      const result = await sendVerifyEmail({ email: values.email });
       if (result?.error) {
-        setError(result.error);
+        setSubmitError(result.error);
       } else {
         setStatus("Verification email sent. Please check your inbox.");
       }
     } catch (e) {
       const message = e instanceof Error ? e.message : "Failed to send email";
-      setError(message);
-    } finally {
-      setLoading(false);
+      setSubmitError(message);
     }
-  }, [email]);
+  };
+
+  const isSubmitting = form.formState.isSubmitting;
 
   return (
     <main className="flex min-h-screen items-center justify-center px-4">
@@ -57,26 +71,33 @@ export default function VerifyEmailPage() {
               We sent a verification link to your email. Please verify to continue.
             </CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="m@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            {status ? (
-              <p className="text-sm text-muted-foreground">{status}</p>
-            ) : null}
-            {error ? <FormMessage>{error}</FormMessage> : null}
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onResend)} className="flex flex-col gap-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input id="email" type="email" placeholder="m@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                {status ? (
+                  <p className="text-sm text-muted-foreground">{status}</p>
+                ) : null}
+                {submitError ? <FormMessage>{submitError}</FormMessage> : null}
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  {isSubmitting ? "Sending..." : "Resend verification email"}
+                </Button>
+              </form>
+            </Form>
           </CardContent>
           <CardFooter className="flex flex-col gap-3">
-            <Button className="w-full" onClick={onResend} disabled={loading}>
-              {loading ? "Sending..." : "Resend verification email"}
-            </Button>
             <p className="text-center text-sm text-muted-foreground">
               Already verified? <a href="/login" className="underline underline-offset-4">Login</a>
             </p>
