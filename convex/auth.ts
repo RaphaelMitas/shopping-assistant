@@ -1,7 +1,7 @@
 import { createClient, type GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
 import { betterAuth } from "better-auth";
-import { sendResetPassword } from "./email";
+import { sendEmailVerification, sendResetPassword } from "./email";
 import { requireActionCtx } from "@convex-dev/better-auth/utils";
 import { type DataModel } from "./_generated/dataModel";
 import { components } from "./_generated/api";
@@ -25,7 +25,16 @@ export const createAuth = (
     },
     baseURL: siteUrl,
     database: authComponent.adapter(ctx),
-    // Configure simple, non-verified email/password to get started
+    emailVerification: {
+      sendOnSignUp: true,
+      autoSignInAfterVerification: true,
+      sendVerificationEmail: async ({ user, url }) => {
+        await sendEmailVerification(requireActionCtx(ctx), {
+          to: user.email,
+          url,
+        });
+      },
+    },
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: true,

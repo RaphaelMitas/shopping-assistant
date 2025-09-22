@@ -5,7 +5,11 @@ import { signIn } from "../actions";
 import { useState } from "react";
 import { Authenticated, Unauthenticated } from "convex/react";
 
-export default function Page() {
+export default function Page({
+  searchParams,
+}: {
+  searchParams: { redirectTo?: string };
+}) {
   const [error, setError] = useState<string | undefined>(undefined);
   const handleSubmit = async (values: LoginFormValues): Promise<void> => {
     setError(undefined);
@@ -19,7 +23,11 @@ export default function Page() {
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
       <div className="w-full max-w-sm">
         <Unauthenticated>
-          <LoginForm onSubmit={handleSubmit} submitError={error} />
+          <LoginForm
+            onSubmit={handleSubmit}
+            submitError={error}
+            redirectTo={searchParams.redirectTo ?? "/"}
+          />
         </Unauthenticated>
         <Authenticated>
           <div>Logged in</div>

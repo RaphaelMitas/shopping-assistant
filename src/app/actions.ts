@@ -57,3 +57,13 @@ export async function resetPassword({ email }: { email: string }) {
   const token = await getToken();
   return await fetchAction(api.users.resetPassword, { email }, { token });
 }
+
+export async function sendVerifyEmail({ email }: { email: string }) {
+  const token = await getToken();
+  return await fetchAction(api.users.sendVerifyEmail, { email }, { token });
+}
+
+export async function deleteUser() {
+  const token = await getToken();
+  return await fetchMutation(api.users.deleteUser, {}, { token });
+}

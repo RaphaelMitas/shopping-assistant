@@ -23,6 +23,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { LoaderCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email"),
@@ -34,15 +35,18 @@ export type LoginFormValues = z.infer<typeof loginSchema>;
 export type LoginFormProps = Omit<React.ComponentProps<"div">, "onSubmit"> & {
   onSubmit?: (values: LoginFormValues) => void | Promise<void>;
   submitError?: string;
+  redirectTo?: string;
 };
 
 export function LoginForm({
   className,
   onSubmit,
   submitError,
+  redirectTo,
   ...props
 }: LoginFormProps) {
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -57,11 +61,14 @@ export function LoginForm({
       setLoading(true);
       if (onSubmit) {
         await onSubmit(values);
+        if (redirectTo) {
+          router.push(redirectTo);
+        }
       }
 
       setLoading(false);
     },
-    [onSubmit],
+    [onSubmit, redirectTo, router],
   );
 
   return (
