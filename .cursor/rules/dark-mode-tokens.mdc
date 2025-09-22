@@ -1,0 +1,20 @@
+---
+alwaysApply: true
+---
+
+## Dark Mode and Color Tokens
+
+- Always use Tailwind variables mapped to CSS custom properties defined in `src/styles/globals.css`.
+- Do not hardcode colors (hex/rgb/hsl/oklch). Use semantic tokens via Tailwind classes or CSS variables.
+- Use `bg-background`, `text-foreground`, `border-border`, `ring-ring`, etc., which map to `--background`, `--foreground`, `--border`, `--ring`.
+- For component states, prefer semantic tokens: `bg-primary text-primary-foreground`, `bg-secondary text-secondary-foreground`, `bg-accent text-accent-foreground`, `bg-muted text-muted-foreground`.
+- For forms: `border-input focus-visible:ring-ring`.
+- For cards/popovers: `bg-card text-card-foreground`, `bg-popover text-popover-foreground`.
+- Use `dark` class from `next-themes` provider (`ThemeProvider`) for toggling themes; do not add manual color overrides per component.
+- If a specific color is needed, add a new semantic variable in `:root` and `.dark` in `src/styles/globals.css`, then map it via `@theme inline`.
+
+### Implementation specifics
+
+- Wrap app root in `ThemeProvider` with `attribute="class"`, `defaultTheme="system"`, `enableSystem`.
+- Prefer Tailwind utility classes; avoid inline `style={{ color: ... }}`.
+- Keep components composable. When extending UI, expose `className` and merge via `cn()` from `@/lib/utils`.

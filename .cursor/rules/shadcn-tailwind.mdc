@@ -1,0 +1,25 @@
+---
+alwaysApply: true
+---
+
+## shadcn/ui + Tailwind Conventions
+
+- Use `components.json` aliases: `@/components`, `@/components/ui`, `@/lib/utils`.
+- Generate UI via shadcn registry compatible with Tailwind CSS using `src/styles/globals.css`.
+- Components must be structured with clear props and a JSX return. Export React components as named exports.
+- Expose `className` and merge via `cn()`.
+- Use Tailwind semantic classes bound to tokens: `bg-background`, `text-foreground`, `border-border`, `ring-ring`.
+- Variants use `data-*` attributes or `aria-*` states; avoid hard-coded colors.
+- Prefer `focus-visible:ring-2 focus-visible:ring-ring` for focus styles.
+- Respect radius tokens: `rounded-sm|md|lg|xl` mapped to `--radius-*`.
+- Use `@layer` utilities sparingly; rely on tokens and shadcn/ui primitives (`Button`, `Input`, `Card`, `Label`, `Textarea`, `Form`).
+- Keep animation utilities using `tw-animate-css` when needed; avoid custom keyframes unless required.
+
+### Theming
+
+- Apply theme through `ThemeProvider` from `next-themes` with `attribute="class"`.
+- Do not theme per component; rely on global tokens in `src/styles/globals.css`.
+
+### Accessibility
+
+- Ensure keyboard navigability. Use semantic HTML, ARIA attributes, and proper label/input associations.

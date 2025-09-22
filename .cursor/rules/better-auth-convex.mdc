@@ -1,0 +1,27 @@
+---
+alwaysApply: true
+---
+
+## Better Auth + Convex Integration
+
+- Client auth: use `authClient` from `@/lib/auth-client`.
+- Server token: use `getToken()` from `@/lib/auth-server` with `createAuth`.
+- Convex client: instantiate once in `ConvexClientProvider` with `expectAuth: true`.
+- Wrap app in `ConvexBetterAuthProvider` with `client` and `authClient`.
+- Never access tokens directly in components; use provided hooks from Better Auth/Convex.
+
+### API Routes / Next.js
+
+- In `src/app/api/auth/[...all]/route.ts` use the Better Auth Next.js handler.
+- For server actions, obtain token via `getToken()`; do not read cookies manually.
+
+### Database / Functions (Convex)
+
+- Use `convex/auth` and `@convex-dev/better-auth` helpers; do not roll your own session logic.
+- Enforce access control in Convex functions using the user identity from auth context; avoid trusting client input.
+
+### Security
+
+- Do not log tokens.
+- Do not pass tokens in query params.
+- Prefer `expectAuth` and handle unauthenticated states explicitly in UI.
