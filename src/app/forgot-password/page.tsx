@@ -1,0 +1,21 @@
+"use client";
+
+import {
+  ForgotPasswordForm,
+  type ForgotPasswordValues,
+} from "@/components/forgot-password-form";
+import { resetPassword } from "../actions";
+
+export default function ForgotPasswordPage() {
+  const handleSubmit = async (values: ForgotPasswordValues) => {
+    const result = await resetPassword(values);
+    console.log(result);
+  };
+  return (
+    <main className="flex min-h-screen items-center justify-center px-4">
+      <div className="w-full max-w-sm">
+        <ForgotPasswordForm onSubmit={handleSubmit} />
+      </div>
+    </main>
+  );
+}
