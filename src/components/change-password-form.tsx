@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,6 +21,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { LoaderCircle } from "lucide-react";
 
 const schema = z
   .object({
@@ -51,11 +51,13 @@ export type ChangePasswordFormProps = Omit<
   "onSubmit"
 > & {
   onSubmit?: (values: ChangePasswordValues) => void | Promise<void>;
+  submitError?: string;
 };
 
 export function ChangePasswordForm({
   className,
   onSubmit,
+  submitError,
   ...props
 }: ChangePasswordFormProps) {
   const form = useForm<ChangePasswordValues>({
@@ -68,19 +70,11 @@ export function ChangePasswordForm({
     mode: "onSubmit",
   });
 
-  const handleSubmit = useCallback(
-    async (values: ChangePasswordValues) => {
-      if (onSubmit) {
-        await onSubmit(values);
-        return;
-      }
-      console.log("Change password submit:", {
-        hasCurrent: Boolean(values.currentPassword),
-        hasNew: Boolean(values.newPassword),
-      });
-    },
-    [onSubmit],
-  );
+  const handleSubmit = async (values: ChangePasswordValues) => {
+    if (onSubmit) {
+      await onSubmit(values);
+    }
+  };
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -154,8 +148,17 @@ export function ChangePasswordForm({
                 )}
               />
 
-              <Button type="submit" className="w-full">
-                Update password
+              {submitError && <FormMessage>{submitError}</FormMessage>}
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={form.formState.isSubmitting}
+              >
+                {form.formState.isSubmitting ? (
+                  <LoaderCircle className="h-4 w-4 animate-spin" />
+                ) : (
+                  "Update password"
+                )}
               </Button>
             </form>
           </Form>

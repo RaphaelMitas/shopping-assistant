@@ -22,30 +22,40 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { LoaderCircle } from "lucide-react";
 
 const schema = z.object({
-  confirm: z.boolean().refine((v) => v === true, {
-    message: "You must confirm to proceed",
-  }),
+  confirm: z
+    .string()
+    .transform((v) => v.trim().toUpperCase())
+    .refine((v) => v === "DELETE", {
+      message: 'Type "DELETE" to confirm',
+    }),
 });
 
-export type DeleteUserValues = z.infer<typeof schema>;
+export type DeleteUserValues = z.input<typeof schema>;
 
 export type DeleteUserFormProps = Omit<
   React.ComponentProps<"div">,
   "onSubmit"
 > & {
   onSubmit?: (values: DeleteUserValues) => void | Promise<void>;
+  submitError?: string;
 };
 
 export function DeleteUserForm({
   className,
   onSubmit,
+  submitError,
   ...props
 }: DeleteUserFormProps) {
-  const form = useForm<DeleteUserValues>({
+  const form = useForm<
+    z.input<typeof schema>,
+    unknown,
+    z.output<typeof schema>
+  >({
     resolver: zodResolver(schema),
-    defaultValues: { confirm: false },
+    defaultValues: { confirm: "" },
     mode: "onSubmit",
   });
 
@@ -60,7 +70,8 @@ export function DeleteUserForm({
     [onSubmit],
   );
 
-  const isConfirmed = form.watch("confirm");
+  const isConfirmed =
+    (form.watch("confirm") ?? "").toString().trim().toUpperCase() === "DELETE";
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -81,32 +92,38 @@ export function DeleteUserForm({
                 control={form.control}
                 name="confirm"
                 render={({ field }) => (
-                  <FormItem className="flex items-start gap-3">
+                  <FormItem className="flex flex-col gap-2">
+                    <FormLabel htmlFor="confirm">
+                      To confirm, type DELETE
+                    </FormLabel>
                     <FormControl>
                       <Input
                         id="confirm"
-                        type="checkbox"
-                        checked={field.value}
-                        onChange={(e) => field.onChange(e.target.checked)}
+                        type="text"
+                        value={field.value}
+                        autoComplete="off"
+                        placeholder="DELETE"
+                        onChange={(e) =>
+                          field.onChange(e.target.value.toUpperCase())
+                        }
                       />
                     </FormControl>
-                    <div className="space-y-1">
-                      <FormLabel htmlFor="confirm">
-                        I understand this will permanently delete my account and
-                        data.
-                      </FormLabel>
-                      <FormMessage />
-                    </div>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
+              {submitError && <FormMessage>{submitError}</FormMessage>}
               <Button
                 type="submit"
                 className="w-full"
                 variant="destructive"
-                disabled={!isConfirmed}
+                disabled={!isConfirmed || form.formState.isSubmitting}
               >
-                Delete account
+                {form.formState.isSubmitting ? (
+                  <LoaderCircle className="h-4 w-4 animate-spin" />
+                ) : (
+                  "Delete account"
+                )}
               </Button>
             </form>
           </Form>

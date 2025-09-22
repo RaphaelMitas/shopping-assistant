@@ -13,7 +13,7 @@ export async function updatePassword({
   newPassword: string;
 }) {
   const token = await getToken();
-  await fetchMutation(
+  return await fetchMutation(
     api.users.updateUserPassword,
     { currentPassword, newPassword },
     { token },
@@ -30,7 +30,7 @@ export async function signUp({
   password: string;
 }) {
   const token = await getToken();
-  return await fetchMutation(
+  return await fetchAction(
     api.users.signUp,
     { name, email, password },
     { token },

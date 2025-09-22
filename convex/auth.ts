@@ -45,6 +45,11 @@ export const createAuth = (
         });
       },
     },
+    user: {
+      deleteUser: {
+        enabled: true,
+      },
+    },
     plugins: [
       // The Convex plugin is required for Convex compatibility
       convex(),

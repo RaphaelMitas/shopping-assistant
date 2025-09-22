@@ -4,40 +4,31 @@ import {
   DeleteUserForm,
   type DeleteUserValues,
 } from "@/components/delete-user-form";
-import { deleteUser, signIn } from "../actions";
-import { Authenticated, Unauthenticated, useQuery } from "convex/react";
-import { LoginForm, type LoginFormValues } from "@/components/login-form";
+import { deleteUser } from "../actions";
+import { Authenticated, AuthLoading, useConvexAuth } from "convex/react";
+import { redirect } from "next/navigation";
 import { useState } from "react";
-import { api } from "convex/_generated/api";
 
 export default function DeleteUserPage() {
-  const user = useQuery(api.users.getCurrentUser);
-
-  const [loginError, setLoginError] = useState<string | undefined>(undefined);
-  const handleLoginSubmit = async (values: LoginFormValues): Promise<void> => {
-    setLoginError(undefined);
-    const result = await signIn(values);
-    console.log(result);
-    if (result.error) {
-      setLoginError(result.error);
-    }
-  };
+  const { isAuthenticated, isLoading } = useConvexAuth();
+  const [error, setError] = useState<string | undefined>();
+  if (!isLoading && !isAuthenticated) {
+    redirect("/login?redirectTo=/delete-user");
+  }
 
   const handleSubmit = async (_values: DeleteUserValues) => {
     const result = await deleteUser();
-    console.log(result);
+    if (result.error) {
+      setError(result.error);
+    }
   };
-
-  console.log("user", user);
 
   return (
     <main className="flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-sm">
-        <Unauthenticated>
-          <LoginForm onSubmit={handleLoginSubmit} submitError={loginError} />
-        </Unauthenticated>
+        <AuthLoading>Loading...</AuthLoading>
         <Authenticated>
-          <DeleteUserForm onSubmit={handleSubmit} />
+          <DeleteUserForm onSubmit={handleSubmit} submitError={error} />
         </Authenticated>
       </div>
     </main>

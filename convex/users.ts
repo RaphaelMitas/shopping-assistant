@@ -1,7 +1,6 @@
 import { action, mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { createAuth, authComponent } from "./auth";
-import { type User } from "better-auth";
 
 export const updateUserPassword = mutation({
   args: {
@@ -9,17 +8,26 @@ export const updateUserPassword = mutation({
     newPassword: v.string(),
   },
   handler: async (ctx, args) => {
-    await createAuth(ctx).api.changePassword({
-      body: {
-        currentPassword: args.currentPassword,
-        newPassword: args.newPassword,
-      },
-      headers: await authComponent.getHeaders(ctx),
-    });
+    try {
+      await createAuth(ctx).api.changePassword({
+        body: {
+          currentPassword: args.currentPassword,
+          newPassword: args.newPassword,
+        },
+        headers: await authComponent.getHeaders(ctx),
+      });
+      return { success: "Password updated successfully" };
+    } catch (error) {
+      console.error(error);
+      return {
+        error:
+          error instanceof Error ? error.message : "Failed to update password",
+      };
+    }
   },
 });
 
-export const signUp = mutation({
+export const signUp = action({
   args: {
     name: v.string(),
     email: v.string(),
@@ -33,7 +41,6 @@ export const signUp = mutation({
           email: args.email,
           password: args.password,
         },
-        headers: await authComponent.getHeaders(ctx),
       });
       return { success: "Signed up successfully" };
     } catch (error) {
@@ -85,25 +92,8 @@ export const signIn = mutation({
 
 export const getCurrentUser = query({
   args: {},
-  handler: async (ctx): Promise<{ user: User | null }> => {
-    try {
-      const user = await authComponent.getAuthUser(ctx);
-      return {
-        user: {
-          id: user._id,
-          createdAt: new Date(user._creationTime),
-          updatedAt: new Date(user._creationTime),
-          email: user.email,
-          emailVerified: user.emailVerified,
-          name: user.name,
-        },
-      };
-    } catch (error) {
-      console.error(error);
-      return {
-        user: null,
-      };
-    }
+  handler: async (ctx) => {
+    return await authComponent.getAuthUser(ctx);
   },
 });
 
@@ -141,9 +131,12 @@ export const deleteUser = mutation({
   handler: async (ctx) => {
     try {
       const result = await createAuth(ctx).api.deleteUser({
-        body: {},
+        body: {
+          callbackURL: `${process.env.SITE_URL}/`,
+        },
         headers: await authComponent.getHeaders(ctx),
       });
+      console.log("deleteUser", result);
       if (result.success === false) {
         return {
           error: result.message,
