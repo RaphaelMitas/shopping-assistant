@@ -22,7 +22,7 @@ export const sendEmailVerification = async (
   },
 ) => {
   await resend.sendEmail(ctx, {
-    from: "Test <onboarding@boboddy.business>",
+    from: "Shopping Assistant (noreply) <noreply@shopping-assistant.raphaelmitas.com>",
     to,
     subject: "Verify your email address",
     html: await render(React.createElement(VerifyEmail, { url })),
@@ -40,7 +40,7 @@ export const sendResetPassword = async (
   },
 ) => {
   await resend.sendEmail(ctx, {
-    from: "Shopping Assistant <noreply@boboddy.business>",
+    from: "Shopping Assistant (noreply) <noreply@shopping-assistant.raphaelmitas.com>",
     to,
     subject: "Reset your password",
     html: await render(React.createElement(ResetPasswordEmail, { url })),
