@@ -27,7 +27,9 @@
     /* Path Aliases */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "convex/_generated/*": ["./convex/_generated/*"],
+      "convex/auth": ["./convex/auth"]
     }
   },
   "include": [
