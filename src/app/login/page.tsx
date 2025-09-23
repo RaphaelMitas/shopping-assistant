@@ -23,10 +23,19 @@ export default function Page() {
       if (result.data?.redirect) {
         router.push(result.data.url ?? "/");
       } else {
-        setError("Failed to sign in");
+        const possibleErrorMessage = (result as unknown as { error?: { message?: string } })?.error?.message;
+        if (possibleErrorMessage && /(verify|not verified|unverified)/i.test(possibleErrorMessage)) {
+          router.push(`/verify-email?email=${encodeURIComponent(values.email)}`);
+          return;
+        }
+        setError(possibleErrorMessage ?? "Failed to sign in");
       }
     } catch (e) {
       const message = e instanceof Error ? e.message : "Failed to sign in";
+      if (/(verify|not verified|unverified)/i.test(message)) {
+        router.push(`/verify-email?email=${encodeURIComponent(values.email)}`);
+        return;
+      }
       setError(message);
     }
   };
