@@ -63,6 +63,26 @@ export async function sendVerifyEmail({ email }: { email: string }) {
   return await fetchAction(api.users.sendVerifyEmail, { email }, { token });
 }
 
+export async function sendVerificationCode({ email }: { email: string }) {
+  const token = await getToken();
+  return await fetchAction(api.users.sendVerificationCode, { email }, { token });
+}
+
+export async function verifyEmailCode({
+  email,
+  code,
+}: {
+  email: string;
+  code: string;
+}) {
+  const token = await getToken();
+  return await fetchAction(
+    api.users.verifyEmailCode,
+    { email, code },
+    { token },
+  );
+}
+
 export async function deleteUser() {
   const token = await getToken();
   return await fetchMutation(api.users.deleteUser, {}, { token });

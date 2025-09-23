@@ -28,13 +28,13 @@ export default function SignUpSuccessPage() {
           <CardHeader>
             <CardTitle>Check your email</CardTitle>
             <CardDescription>
-              We sent a verification link to {email || "your email"}. Verify
-              your email to finish creating your account.
+              We sent a 6-digit verification code to {email || "your email"}.
+              Enter it to finish creating your account.
             </CardDescription>
           </CardHeader>
           <CardContent className="text-muted-foreground text-sm">
             Didn&apos;t get the email? It may take a couple of minutes. You can
-            also resend it from the verification page.
+            resend a code from the verification page.
           </CardContent>
           <CardFooter className="flex flex-col gap-3">
             <Link

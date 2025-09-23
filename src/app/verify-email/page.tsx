@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { redirect, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { sendVerifyEmail } from "../actions";
+import { sendVerificationCode, verifyEmailCode } from "../actions";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -29,6 +29,7 @@ import { api } from "convex/_generated/api";
 
 const schema = z.object({
   email: z.string().email("Please enter a valid email"),
+  code: z.string().min(6, "Enter the 6-digit code").max(8).optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -57,14 +58,42 @@ export default function VerifyEmailPage() {
     setStatus(undefined);
     setSubmitError(undefined);
     try {
-      const result = await sendVerifyEmail({ email: values.email });
+      const result = await sendVerificationCode({ email: values.email });
       if (result?.error) {
         setSubmitError(result.error);
       } else {
-        setStatus("Verification email sent. Please check your inbox.");
+        setStatus("Verification code sent. Please check your email.");
       }
     } catch (e) {
-      const message = e instanceof Error ? e.message : "Failed to send email";
+      const message = e instanceof Error ? e.message : "Failed to send code";
+      setSubmitError(message);
+    }
+  };
+
+  useEffect(() => {
+    if (initialEmail) {
+      // Fire and forget initial code send
+      void sendVerificationCode({ email: initialEmail });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialEmail]);
+
+  const onVerify = async (values: FormValues) => {
+    setStatus(undefined);
+    setSubmitError(undefined);
+    try {
+      const code = values.code ?? "";
+      const result = await verifyEmailCode({
+        email: values.email,
+        code,
+      });
+      if (result?.error) {
+        setSubmitError(result.error);
+      } else {
+        setStatus("Email verified. You can continue.");
+      }
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Failed to verify";
       setSubmitError(message);
     }
   };
@@ -99,14 +128,13 @@ export default function VerifyEmailPage() {
           <CardHeader>
             <CardTitle>Verify your email</CardTitle>
             <CardDescription>
-              We sent a verification link to your email. Please verify to
-              continue.
+              Enter the code we emailed to you to verify your address.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Form {...form}>
               <form
-                onSubmit={form.handleSubmit(onResend)}
+                onSubmit={form.handleSubmit(onVerify)}
                 className="flex flex-col gap-4"
               >
                 <FormField
@@ -127,6 +155,25 @@ export default function VerifyEmailPage() {
                     </FormItem>
                   )}
                 />
+                <FormField
+                  control={form.control}
+                  name="code"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Verification code</FormLabel>
+                      <FormControl>
+                        <Input
+                          id="code"
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="123456"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 {status ? (
                   <p className="text-muted-foreground text-sm">{status}</p>
                 ) : null}
@@ -136,12 +183,20 @@ export default function VerifyEmailPage() {
                   className="w-full"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Sending..." : "Resend verification email"}
+                  {isSubmitting ? "Verifying..." : "Verify"}
                 </Button>
               </form>
             </Form>
           </CardContent>
           <CardFooter className="flex flex-col gap-3">
+            <Button
+              variant="secondary"
+              className="w-full"
+              onClick={() => form.handleSubmit(onResend)()}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Sending..." : "Resend code"}
+            </Button>
             <p className="text-muted-foreground text-center text-sm">
               Already verified?{" "}
               <a
