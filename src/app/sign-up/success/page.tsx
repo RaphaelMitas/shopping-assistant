@@ -16,6 +16,10 @@ import { Button } from "@/components/ui/button";
 export default function SignUpSuccessPage() {
   const searchParams = useSearchParams();
   const email = useMemo(() => searchParams.get("email") ?? "", [searchParams]);
+  const redirectTo = useMemo(
+    () => searchParams.get("redirectTo") ?? "",
+    [searchParams],
+  );
 
   return (
     <main className="flex min-h-screen items-center justify-center px-4">
@@ -33,12 +37,25 @@ export default function SignUpSuccessPage() {
             also resend it from the verification page.
           </CardContent>
           <CardFooter className="flex flex-col gap-3">
-            <Link href={`/verify-email?email=${encodeURIComponent(email)}`}>
+            <Link
+              href={`/verify-email?email=${encodeURIComponent(email)}${
+                redirectTo
+                  ? `&redirectTo=${encodeURIComponent(redirectTo)}`
+                  : ""
+              }`}
+            >
               <Button className="w-full">Go to verification</Button>
             </Link>
             <p className="text-muted-foreground text-center text-sm">
               Already verified?{" "}
-              <a href="/login" className="underline underline-offset-4">
+              <a
+                href={
+                  redirectTo
+                    ? `/login?redirectTo=${encodeURIComponent(redirectTo)}`
+                    : "/login"
+                }
+                className="underline underline-offset-4"
+              >
                 Login
               </a>
             </p>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -42,6 +43,8 @@ export function LoginForm({
   submitError,
   ...props
 }: LoginFormProps) {
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirectTo");
   const [loading, setLoading] = useState(false);
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -134,7 +137,14 @@ export function LoginForm({
               </div>
               <div className="mt-4 text-center text-sm">
                 Don&apos;t have an account?{" "}
-                <a href="/sign-up" className="underline underline-offset-4">
+                <a
+                  href={
+                    redirectTo
+                      ? `/sign-up?redirectTo=${encodeURIComponent(redirectTo)}`
+                      : "/sign-up"
+                  }
+                  className="underline underline-offset-4"
+                >
                   Sign up
                 </a>
               </div>

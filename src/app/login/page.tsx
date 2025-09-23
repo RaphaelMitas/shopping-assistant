@@ -24,9 +24,10 @@ export default function Page() {
         router.push(result.data.url ?? "/");
       } else {
         if (result.error?.code === "EMAIL_NOT_VERIFIED") {
-          router.push(
-            `/verify-email?email=${encodeURIComponent(values.email)}`,
-          );
+          const verifyUrl = `/verify-email?email=${encodeURIComponent(
+            values.email,
+          )}${redirectTo ? `&redirectTo=${encodeURIComponent(redirectTo)}` : ""}`;
+          router.push(verifyUrl);
           return;
         }
         setError(result.error?.message ?? "Failed to sign in");

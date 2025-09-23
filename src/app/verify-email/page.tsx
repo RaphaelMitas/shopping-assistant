@@ -144,7 +144,14 @@ export default function VerifyEmailPage() {
           <CardFooter className="flex flex-col gap-3">
             <p className="text-muted-foreground text-center text-sm">
               Already verified?{" "}
-              <a href="/login" className="underline underline-offset-4">
+              <a
+                href={
+                  redirectTo
+                    ? `/login?redirectTo=${encodeURIComponent(redirectTo)}`
+                    : "/login"
+                }
+                className="underline underline-offset-4"
+              >
                 Login
               </a>
             </p>
