@@ -2,16 +2,29 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import { z } from "zod";
 
-export const Message = z.object({
-  role: z.union([z.literal("user"), z.literal("assistant")]),
-  content: z.object({
-    type: z.union([z.literal("text"), z.literal("choice")]),
-    text: z.string(),
-    choices: z.array(
-      z.object({ label: z.string(), value: z.string(), icon: z.string() }),
-    ),
-  }),
+export const textMessage = z.object({
+  type: z.literal("text"),
+  text: z.string(),
 });
+
+export const choiceMessage = z.object({
+  type: z.literal("choice"),
+  choices: z.array(
+    z.object({ label: z.string(), value: z.string(), icon: z.string() }),
+  ),
+});
+
+const AssistantMessage = z.object({
+  role: z.literal("assistant"),
+  content: z.union([textMessage, choiceMessage]),
+});
+
+export const UserMessage = z.object({
+  role: z.literal("user"),
+  content: textMessage,
+});
+
+export const Message = z.union([AssistantMessage, UserMessage]);
 
 export default defineSchema({
   shoppingChats: defineTable({

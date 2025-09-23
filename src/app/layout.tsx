@@ -5,6 +5,10 @@ import { Geist } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import type { ReactNode } from "react";
 import { ConvexClientProvider } from "./ConvexClientProvider";
+import { AutumnClientProvider } from "./AutmnClientProvider";
+import { AppSidebar } from "@/components/app-sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { authClient } from "@/lib/auth-client";
 
 export const metadata: Metadata = {
   title: "Create T3 App",
@@ -29,7 +33,17 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             enableSystem
             disableTransitionOnChange
           >
-            <ConvexClientProvider>{children}</ConvexClientProvider>
+            <ConvexClientProvider>
+              <AutumnClientProvider>
+                <SidebarProvider>
+                  <AppSidebar />
+                  <main className="bg-background relative flex w-full flex-1 flex-col md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2">
+                    <SidebarTrigger className="m-2" />
+                    {children}
+                  </main>
+                </SidebarProvider>
+              </AutumnClientProvider>
+            </ConvexClientProvider>
           </ThemeProvider>
         </body>
       </html>
