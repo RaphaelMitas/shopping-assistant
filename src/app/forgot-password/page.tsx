@@ -15,6 +15,17 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import {
   InputOTP,
   InputOTPGroup,
@@ -23,9 +34,16 @@ import {
 } from "@/components/ui/input-otp";
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState("");
-  const [otp, setOtp] = useState("");
-  const [password, setPassword] = useState("");
+  const schema = z.object({
+    email: z.string().email("Please enter a valid email"),
+    otp: z.string().min(6, "Enter the 6-digit code").max(6),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+  });
+  const form = useForm<z.infer<typeof schema>>({
+    resolver: zodResolver(schema),
+    defaultValues: { email: "", otp: "", password: "" },
+    mode: "onSubmit",
+  });
   const [status, setStatus] = useState<string | undefined>(undefined);
   const [error, setError] = useState<string | undefined>(undefined);
   const [sending, setSending] = useState(false);
@@ -43,26 +61,31 @@ export default function ForgotPasswordPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col gap-3">
-              <Input
-                id="email"
-                type="email"
-                placeholder="m@example.com"
-                value={email}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setEmail(e.target.value)
-                }
-              />
+            <Form {...form}>
+              <form className="flex flex-col gap-3" onSubmit={(e) => e.preventDefault()}>
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input id="email" type="email" placeholder="m@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               <Button
                 className="w-full"
-                disabled={sending || !email}
+                  disabled={sending || !form.getValues("email")}
                 onClick={async () => {
                   setError(undefined);
                   setStatus(undefined);
                   setSending(true);
                   try {
                     const { error: sendError } =
-                      await authClient.forgetPassword.emailOtp({ email });
+                        await authClient.forgetPassword.emailOtp({ email: form.getValues("email") });
                     if (sendError) setError(sendError.message ?? "Failed to send code");
                     else setStatus("Code sent. Check your inbox.");
                   } catch (e) {
@@ -76,32 +99,43 @@ export default function ForgotPasswordPage() {
               >
                 {sending ? "Sending..." : "Send code"}
               </Button>
-
-              <InputOTP
-                maxLength={6}
-                value={otp}
-                onChange={(value) => setOtp(value)}
-              >
-                <InputOTPGroup>
-                  <InputOTPSlot index={0} />
-                  <InputOTPSlot index={1} />
-                  <InputOTPSlot index={2} />
-                </InputOTPGroup>
-                <InputOTPSeparator />
-                <InputOTPGroup>
-                  <InputOTPSlot index={3} />
-                  <InputOTPSlot index={4} />
-                  <InputOTPSlot index={5} />
-                </InputOTPGroup>
-              </InputOTP>
-              <Input
-                id="new-password"
-                type="password"
-                placeholder="New password"
-                value={password}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setPassword(e.target.value)
-                }
+              <FormField
+                control={form.control}
+                name="otp"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>One-time code</FormLabel>
+                    <FormControl>
+                      <InputOTP maxLength={6} value={field.value ?? ""} onChange={field.onChange}>
+                        <InputOTPGroup>
+                          <InputOTPSlot index={0} />
+                          <InputOTPSlot index={1} />
+                          <InputOTPSlot index={2} />
+                        </InputOTPGroup>
+                        <InputOTPSeparator />
+                        <InputOTPGroup>
+                          <InputOTPSlot index={3} />
+                          <InputOTPSlot index={4} />
+                          <InputOTPSlot index={5} />
+                        </InputOTPGroup>
+                      </InputOTP>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>New password</FormLabel>
+                    <FormControl>
+                      <Input id="new-password" type="password" placeholder="New password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
               {status ? (
                 <p className="text-muted-foreground text-sm">{status}</p>
@@ -109,15 +143,20 @@ export default function ForgotPasswordPage() {
               {error ? <p className="text-destructive text-sm">{error}</p> : null}
               <Button
                 className="w-full"
-                disabled={resetting || !email || !otp || password.length < 8}
+                disabled={
+                  resetting ||
+                  !form.getValues("email") ||
+                  (form.getValues("otp")?.length ?? 0) !== 6 ||
+                  (form.getValues("password")?.length ?? 0) < 8
+                }
                 onClick={async () => {
                   setError(undefined);
                   setResetting(true);
                   try {
                     const { error: resetError } = await authClient.emailOtp.resetPassword({
-                      email,
-                      otp,
-                      password,
+                      email: form.getValues("email"),
+                      otp: form.getValues("otp"),
+                      password: form.getValues("password"),
                     });
                     if (resetError)
                       setError(resetError.message ?? "Failed to reset password");
@@ -133,7 +172,8 @@ export default function ForgotPasswordPage() {
               >
                 {resetting ? "Resetting..." : "Reset password"}
               </Button>
-            </div>
+              </form>
+            </Form>
           </CardContent>
         </Card>
       </div>

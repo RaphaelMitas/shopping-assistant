@@ -52,7 +52,15 @@ export default function VerifyEmailPage() {
   );
   const [status, setStatus] = useState<string | undefined>(undefined);
   const [submitError, setSubmitError] = useState<string | undefined>(undefined);
-  const [otp, setOtp] = useState("");
+  const otpSchema = z.object({
+    email: z.string().email("Please enter a valid email"),
+    otp: z.string().min(6, "Enter the 6-digit code").max(6),
+  });
+  const otpForm = useForm<z.infer<typeof otpSchema>>({
+    resolver: zodResolver(otpSchema),
+    defaultValues: { email: initialEmail, otp: "" },
+    mode: "onSubmit",
+  });
   const user = useQuery(api.users.getCurrentUser);
 
   const form = useForm<FormValues>({
@@ -145,46 +153,56 @@ export default function VerifyEmailPage() {
             </Form>
           </CardContent>
           <CardFooter className="flex flex-col gap-3">
-            <div className="flex w-full flex-col gap-2">
-              <InputOTP
-                maxLength={6}
-                value={otp}
-                onChange={(value) => setOtp(value)}
-              >
-                <InputOTPGroup>
-                  <InputOTPSlot index={0} />
-                  <InputOTPSlot index={1} />
-                  <InputOTPSlot index={2} />
-                </InputOTPGroup>
-                <InputOTPSeparator />
-                <InputOTPGroup>
-                  <InputOTPSlot index={3} />
-                  <InputOTPSlot index={4} />
-                  <InputOTPSlot index={5} />
-                </InputOTPGroup>
-              </InputOTP>
-              <Button
-                disabled={!otp || form.formState.isSubmitting}
-                onClick={async () => {
+            <Form {...otpForm}>
+              <form
+                className="flex w-full flex-col gap-2"
+                onSubmit={async (e) => {
+                  e.preventDefault();
                   setSubmitError(undefined);
+                  const values = otpForm.getValues();
                   try {
-                    const email = form.getValues("email");
                     const { error } = await authClient.emailOtp.verifyEmail({
-                      email,
-                      otp,
+                      email: form.getValues("email"),
+                      otp: values.otp,
                     });
-                    if (error) setSubmitError(error.message ?? "Failed to verify");
+                    if (error) otpForm.setError("otp", { message: error.message ?? "Failed to verify" });
                     else router.push(redirectTo);
                   } catch (e) {
-                    const message =
-                      e instanceof Error ? e.message : "Failed to verify";
-                    setSubmitError(message);
+                    const message = e instanceof Error ? e.message : "Failed to verify";
+                    otpForm.setError("otp", { message });
                   }
                 }}
               >
-                Verify code
-              </Button>
-            </div>
+                <FormField
+                  control={otpForm.control}
+                  name="otp"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>One-time code</FormLabel>
+                      <FormControl>
+                        <InputOTP maxLength={6} value={field.value ?? ""} onChange={field.onChange}>
+                          <InputOTPGroup>
+                            <InputOTPSlot index={0} />
+                            <InputOTPSlot index={1} />
+                            <InputOTPSlot index={2} />
+                          </InputOTPGroup>
+                          <InputOTPSeparator />
+                          <InputOTPGroup>
+                            <InputOTPSlot index={3} />
+                            <InputOTPSlot index={4} />
+                            <InputOTPSlot index={5} />
+                          </InputOTPGroup>
+                        </InputOTP>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" disabled={otpForm.formState.isSubmitting || (otpForm.getValues("otp")?.length ?? 0) !== 6}>
+                  Verify code
+                </Button>
+              </form>
+            </Form>
             <p className="text-muted-foreground text-center text-sm">
               Already verified?{" "}
               <a

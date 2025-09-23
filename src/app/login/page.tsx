@@ -14,6 +14,17 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import {
   InputOTP,
   InputOTPGroup,
@@ -26,8 +37,15 @@ export default function Page() {
   const redirectTo = searchParams.get("redirectTo");
   const router = useRouter();
   const [error, setError] = useState<string | undefined>(undefined);
-  const [otpEmail, setOtpEmail] = useState("");
-  const [otpCode, setOtpCode] = useState("");
+  const otpSchema = z.object({
+    email: z.string().email("Please enter a valid email"),
+    otp: z.string().min(6, "Enter the 6-digit code").max(6),
+  });
+  const otpForm = useForm<z.infer<typeof otpSchema>>({
+    resolver: zodResolver(otpSchema),
+    defaultValues: { email: "", otp: "" },
+    mode: "onSubmit",
+  });
   const [otpStatus, setOtpStatus] = useState<string | undefined>(undefined);
   const [otpSending, setOtpSending] = useState(false);
   const [otpSigningIn, setOtpSigningIn] = useState(false);
@@ -71,20 +89,25 @@ export default function Page() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex flex-col gap-3">
-                  <Input
-                    id="otp-email"
-                    type="email"
-                    placeholder="m@example.com"
-                    value={otpEmail}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      setOtpEmail(e.target.value)
-                    }
-                  />
+                <Form {...otpForm}>
+                  <form className="flex flex-col gap-3" onSubmit={(e) => e.preventDefault()}>
+                    <FormField
+                      control={otpForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input id="otp-email" type="email" placeholder="m@example.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   <div className="flex gap-2">
                     <Button
                       className="w-full"
-                      disabled={otpSending || !otpEmail}
+                      disabled={otpSending || !otpForm.getValues("email")}
                       onClick={async () => {
                         setOtpStatus(undefined);
                         setError(undefined);
@@ -92,7 +115,7 @@ export default function Page() {
                         try {
                           const { error: sendError } =
                             await authClient.emailOtp.sendVerificationOtp({
-                              email: otpEmail,
+                              email: otpForm.getValues("email"),
                               type: "sign-in",
                             });
                           if (sendError) {
@@ -112,37 +135,45 @@ export default function Page() {
                       {otpSending ? "Sending..." : "Send code"}
                     </Button>
                   </div>
-                  <InputOTP
-                    maxLength={6}
-                    value={otpCode}
-                    onChange={(value) => setOtpCode(value)}
-                  >
-                    <InputOTPGroup>
-                      <InputOTPSlot index={0} />
-                      <InputOTPSlot index={1} />
-                      <InputOTPSlot index={2} />
-                    </InputOTPGroup>
-                    <InputOTPSeparator />
-                    <InputOTPGroup>
-                      <InputOTPSlot index={3} />
-                      <InputOTPSlot index={4} />
-                      <InputOTPSlot index={5} />
-                    </InputOTPGroup>
-                  </InputOTP>
+                  <FormField
+                    control={otpForm.control}
+                    name="otp"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>One-time code</FormLabel>
+                        <FormControl>
+                          <InputOTP maxLength={6} value={field.value ?? ""} onChange={field.onChange}>
+                            <InputOTPGroup>
+                              <InputOTPSlot index={0} />
+                              <InputOTPSlot index={1} />
+                              <InputOTPSlot index={2} />
+                            </InputOTPGroup>
+                            <InputOTPSeparator />
+                            <InputOTPGroup>
+                              <InputOTPSlot index={3} />
+                              <InputOTPSlot index={4} />
+                              <InputOTPSlot index={5} />
+                            </InputOTPGroup>
+                          </InputOTP>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   {otpStatus ? (
                     <p className="text-muted-foreground text-sm">{otpStatus}</p>
                   ) : null}
                   {error ? <p className="text-destructive text-sm">{error}</p> : null}
                   <Button
                     className="w-full"
-                    disabled={otpSigningIn || !otpEmail || !otpCode}
+                    disabled={otpSigningIn || !otpForm.getValues("email") || (otpForm.getValues("otp")?.length ?? 0) !== 6}
                     onClick={async () => {
                       setError(undefined);
                       setOtpSigningIn(true);
                       try {
                         const result = await authClient.signIn.emailOtp({
-                          email: otpEmail,
-                          otp: otpCode,
+                          email: otpForm.getValues("email"),
+                          otp: otpForm.getValues("otp"),
                         });
                         if (result.error) {
                           setError(result.error.message ?? "Failed to sign in");
@@ -160,7 +191,8 @@ export default function Page() {
                   >
                     {otpSigningIn ? "Signing in..." : "Sign in with code"}
                   </Button>
-                </div>
+                  </form>
+                </Form>
               </CardContent>
             </Card>
           </div>
