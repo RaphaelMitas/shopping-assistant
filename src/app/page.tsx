@@ -15,13 +15,8 @@ import {
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import {
-  Authenticated,
-  AuthLoading,
-  Unauthenticated,
-  useQuery,
-} from "convex/react";
-import { api } from "convex/_generated/api";
+import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
+import { searchWeb } from "./firecrawl-actions";
 
 export default function HomePage() {
   const schema = z.object({
@@ -36,12 +31,11 @@ export default function HomePage() {
     mode: "onSubmit",
   });
 
-  const onSubmit = useCallback((values: FormValues) => {
+  const onSubmit = useCallback(async (values: FormValues) => {
+    const result = await searchWeb(values.query.trim());
     console.log("Customer wants to buy:", values.query.trim());
+    console.log("Result:", result);
   }, []);
-
-  const currentUser = useQuery(api.users.getCurrentUser);
-  console.log("Current user:", currentUser);
 
   return (
     <main className="flex min-h-screen items-center justify-center px-4">
@@ -83,7 +77,9 @@ export default function HomePage() {
               <Button
                 type="submit"
                 size="lg"
-                disabled={!form.getValues("query").trim()}
+                disabled={
+                  form.formState.isSubmitting || !form.formState.isValid
+                }
               >
                 Continue
               </Button>

@@ -13,6 +13,7 @@ import type * as email from "../email.js";
 import type * as emails_components_BaseEmail from "../emails/components/BaseEmail.js";
 import type * as emails_resetPassword from "../emails/resetPassword.js";
 import type * as emails_verifyEmail from "../emails/verifyEmail.js";
+import type * as firecrawl from "../firecrawl.js";
 import type * as http from "../http.js";
 import type * as users from "../users.js";
 
@@ -36,6 +37,7 @@ declare const fullApi: ApiFromModules<{
   "emails/components/BaseEmail": typeof emails_components_BaseEmail;
   "emails/resetPassword": typeof emails_resetPassword;
   "emails/verifyEmail": typeof emails_verifyEmail;
+  firecrawl: typeof firecrawl;
   http: typeof http;
   users: typeof users;
 }>;
