@@ -1,11 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { redirect, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { sendVerifyEmail } from "../actions";
+import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -34,6 +34,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export default function VerifyEmailPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const initialEmail = useMemo(
     () => searchParams.get("email") ?? "",
@@ -45,6 +46,7 @@ export default function VerifyEmailPage() {
   );
   const [status, setStatus] = useState<string | undefined>(undefined);
   const [submitError, setSubmitError] = useState<string | undefined>(undefined);
+  const [otp, setOtp] = useState("");
   const user = useQuery(api.users.getCurrentUser);
 
   const form = useForm<FormValues>({
@@ -57,12 +59,12 @@ export default function VerifyEmailPage() {
     setStatus(undefined);
     setSubmitError(undefined);
     try {
-      const result = await sendVerifyEmail({ email: values.email });
-      if (result?.error) {
-        setSubmitError(result.error);
-      } else {
-        setStatus("Verification email sent. Please check your inbox.");
-      }
+      const { error } = await authClient.emailOtp.sendVerificationOtp({
+        email: values.email,
+        type: "email-verification",
+      });
+      if (error) setSubmitError(error.message ?? "Failed to send code");
+      else setStatus("Code sent. Please check your inbox.");
     } catch (e) {
       const message = e instanceof Error ? e.message : "Failed to send email";
       setSubmitError(message);
@@ -84,7 +86,7 @@ export default function VerifyEmailPage() {
               </CardDescription>
             </CardHeader>
             <CardFooter>
-              <Button onClick={() => redirect(redirectTo)}>Continue</Button>
+              <Button onClick={() => router.push(redirectTo)}>Continue</Button>
             </CardFooter>
           </Card>
         </div>
@@ -99,8 +101,7 @@ export default function VerifyEmailPage() {
           <CardHeader>
             <CardTitle>Verify your email</CardTitle>
             <CardDescription>
-              We sent a verification link to your email. Please verify to
-              continue.
+              Enter your email to receive a one-time code.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -131,17 +132,45 @@ export default function VerifyEmailPage() {
                   <p className="text-muted-foreground text-sm">{status}</p>
                 ) : null}
                 {submitError ? <FormMessage>{submitError}</FormMessage> : null}
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "Sending..." : "Resend verification email"}
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  {isSubmitting ? "Sending..." : "Send code"}
                 </Button>
               </form>
             </Form>
           </CardContent>
           <CardFooter className="flex flex-col gap-3">
+            <div className="flex w-full flex-col gap-2">
+              <Input
+                id="otp"
+                inputMode="numeric"
+                placeholder="Enter 6-digit code"
+                value={otp}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setOtp(e.target.value)
+                }
+              />
+              <Button
+                disabled={!otp || form.formState.isSubmitting}
+                onClick={async () => {
+                  setSubmitError(undefined);
+                  try {
+                    const email = form.getValues("email");
+                    const { error } = await authClient.emailOtp.verifyEmail({
+                      email,
+                      otp,
+                    });
+                    if (error) setSubmitError(error.message ?? "Failed to verify");
+                    else router.push(redirectTo);
+                  } catch (e) {
+                    const message =
+                      e instanceof Error ? e.message : "Failed to verify";
+                    setSubmitError(message);
+                  }
+                }}
+              >
+                Verify code
+              </Button>
+            </div>
             <p className="text-muted-foreground text-center text-sm">
               Already verified?{" "}
               <a
