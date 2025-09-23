@@ -38,7 +38,7 @@ export default function HomePage() {
   }, []);
 
   return (
-    <main className="flex h-full items-center justify-center px-4">
+    <div className="flex h-full items-center justify-center px-4">
       <div className="w-full max-w-xl">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-semibold tracking-tight">
@@ -86,21 +86,7 @@ export default function HomePage() {
             </div>
           </form>
         </Form>
-
-        <Unauthenticated>
-          Logged out{" "}
-          <a className="underline" href="/login">
-            Login
-          </a>
-        </Unauthenticated>
-        <Authenticated>
-          Logged in{" "}
-          <a className="underline" href="/login">
-            Logout
-          </a>
-        </Authenticated>
-        <AuthLoading>Loading...</AuthLoading>
       </div>
-    </main>
+    </div>
   );
 }

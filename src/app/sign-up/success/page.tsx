@@ -22,7 +22,7 @@ export default function SignUpSuccessPage() {
   );
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4">
+    <div className="flex h-full items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <Card>
           <CardHeader>
@@ -62,6 +62,6 @@ export default function SignUpSuccessPage() {
           </CardFooter>
         </Card>
       </div>
-    </main>
+    </div>
   );
 }

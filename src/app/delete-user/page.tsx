@@ -28,13 +28,13 @@ export default function DeleteUserPage() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4">
+    <div className="flex h-full items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <AuthLoading>Loading...</AuthLoading>
         <Authenticated>
           <DeleteUserForm onSubmit={handleSubmit} submitError={error} />
         </Authenticated>
       </div>
-    </main>
+    </div>
   );
 }

@@ -24,10 +24,10 @@ export default function SignUpPage() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4">
+    <div className="flex h-full items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <SignUpForm onSubmit={handleSubmit} submitError={error} />
       </div>
-    </main>
+    </div>
   );
 }

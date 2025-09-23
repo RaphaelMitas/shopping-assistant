@@ -1,56 +1,71 @@
 import { openai } from "@ai-sdk/openai";
-import { choiceMessage, Message, textMessage } from "./schema";
-import { generateObject } from "ai";
-import { z } from "zod";
-import { query } from "./_generated/server";
+import { components } from "./_generated/api";
+import { Agent } from "@convex-dev/agent";
+import {
+  action,
+  type ActionCtx,
+  mutation,
+  type MutationCtx,
+} from "./_generated/server";
 import { v } from "convex/values";
-import { NoOp } from "convex-helpers/server/customFunctions";
-import { zCustomQuery } from "convex-helpers/server/zod";
+import { authComponent } from "./auth";
+import { autumn } from "./autumn";
 
-const zQuery = zCustomQuery(query, NoOp);
-
-const gpt5mini = openai.chat("gpt-5-mini");
-
-type MessageType = z.infer<typeof Message>;
-
-const startSearch = z.object({
-  type: z.literal("startShoppingSearch"),
-  query: z.string(),
+const agent = new Agent(components.agent, {
+  name: "My Agent",
+  languageModel: openai.chat("gpt-5-mini"),
+  instructions: "You are a weather forecaster.",
+  maxSteps: 3,
 });
 
-const AssistantMessage = z.union([textMessage, choiceMessage, startSearch]);
-
-const generateMessageString = (message: MessageType) => {
-  if (message.role === "user") {
-    return `User: ${message.content.text}`;
-  } else {
-    if (message.content.type === "text") {
-      return `Assistant: ${message.content.text}`;
-    } else {
-      return `Assistant: choices: ${message.content.choices.map((choice) => choice.label).join(", ")}`;
-    }
+const createThreadHandler = async (ctx: MutationCtx | ActionCtx) => {
+  const user = await authComponent.getAuthUser(ctx);
+  if (!user) {
+    throw new Error("User not found");
   }
-};
-
-export const generateShoppingChat = async (messages: MessageType[]) => {
-  const result = await generateObject({
-    model: gpt5mini,
-    schema: AssistantMessage,
-    prompt: `You are a shopping assistant. You interact with the user until you have enough information to start a shopping search. Respond to the conversation below.\n${messages.map(generateMessageString).join("\n")}`,
+  const data = await agent.createThread(ctx, {
+    userId: user._id,
   });
-  return result;
+
+  return data.threadId;
 };
 
-export const startShoppingSearch = zQuery({
-  args: {
-    messages: z.array(Message),
-  },
-  handler: async (ctx, args) => {
-    const userIdentity = await ctx.auth.getUserIdentity();
-    if (!userIdentity) {
-      throw new Error("User not authenticated");
-    }
-    const result = await generateShoppingChat(args.messages);
+export const createThread = mutation({
+  args: {},
+  handler: createThreadHandler,
+});
+
+const sendMessageToAgentHandler = async (
+  ctx: ActionCtx,
+  { threadId, message }: { threadId: string; message: string },
+) => {
+  // const user = await authComponent.getAuthUser(ctx);
+  const { thread } = await agent.continueThread(ctx, { threadId });
+  // const threadMetadata = await thread.getMetadata();
+  // if (threadMetadata.userId !== user._id) {
+  //   throw new Error("User did not create this thread");
+  // }
+  const result = await thread.generateText({ prompt: message });
+  const totalTokens = result.usage.totalTokens;
+
+  await autumn.track(ctx, {
+    featureId: "ai_tokens",
+    value: totalTokens,
+  });
+
+  return result.text;
+};
+
+export const sendMessageToAgent = action({
+  args: { threadId: v.string(), message: v.string() },
+  handler: sendMessageToAgentHandler,
+});
+
+export const createThreadAndSendMessage = action({
+  args: { message: v.string() },
+  handler: async (ctx, { message }) => {
+    const threadId = await createThreadHandler(ctx);
+    const result = await sendMessageToAgentHandler(ctx, { threadId, message });
     return result;
   },
 });
