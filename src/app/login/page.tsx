@@ -23,7 +23,13 @@ export default function Page() {
       if (result.data?.redirect) {
         router.push(result.data.url ?? "/");
       } else {
-        setError("Failed to sign in");
+        if (result.error?.code === "EMAIL_NOT_VERIFIED") {
+          router.push(
+            `/verify-email?email=${encodeURIComponent(values.email)}`,
+          );
+          return;
+        }
+        setError(result.error?.message ?? "Failed to sign in");
       }
     } catch (e) {
       const message = e instanceof Error ? e.message : "Failed to sign in";

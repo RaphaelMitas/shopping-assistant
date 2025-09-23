@@ -95,7 +95,7 @@ export default function HomePage() {
         </Unauthenticated>
         <Authenticated>
           Logged in{" "}
-          <a className="underline" href="/logout">
+          <a className="underline" href="/login">
             Logout
           </a>
         </Authenticated>

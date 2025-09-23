@@ -8,6 +8,7 @@ import { deleteUser } from "../actions";
 import { Authenticated, AuthLoading, useConvexAuth } from "convex/react";
 import { redirect } from "next/navigation";
 import { useState } from "react";
+import { authClient } from "@/lib/auth-client";
 
 export default function DeleteUserPage() {
   const { isAuthenticated, isLoading } = useConvexAuth();
@@ -20,6 +21,9 @@ export default function DeleteUserPage() {
     const result = await deleteUser();
     if (result.error) {
       setError(result.error);
+    } else {
+      await authClient.signOut();
+      redirect("/");
     }
   };
 
