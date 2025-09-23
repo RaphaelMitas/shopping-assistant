@@ -37,6 +37,8 @@ import { Skeleton } from "./ui/skeleton";
 import { authClient } from "@/lib/auth-client";
 import Link from "next/link";
 import type { User } from "better-auth";
+import { useCustomer } from "autumn-js/react";
+import { type CustomerProduct } from "autumn-js";
 
 export function NavUser() {
   return (
@@ -56,7 +58,7 @@ export function NavUser() {
       <AuthLoading>
         <SidebarMenuItem>
           <SidebarMenuButton size="lg" disabled>
-            <UserAvatar user={undefined} />
+            <UserAvatar user={undefined} premiumProduct={undefined} />
             <ChevronsUpDown className="ml-auto size-4" />
           </SidebarMenuButton>
         </SidebarMenuItem>
@@ -71,6 +73,12 @@ export function NavUser() {
 const NavUserAuthenticated = () => {
   const user = useQuery(api.users.getCurrentUser);
   const { isMobile } = useSidebar();
+  const { customer } = useCustomer();
+
+  const premiumProduct = customer?.products
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
+    .filter((product) => product.status === "active")
+    .find((product) => product.id === "premium");
 
   return (
     <SidebarMenuItem>
@@ -81,7 +89,7 @@ const NavUserAuthenticated = () => {
             className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             disabled={!user}
           >
-            <UserAvatar user={user} />
+            <UserAvatar user={user} premiumProduct={premiumProduct} />
             <ChevronsUpDown className="ml-auto size-4" />
           </SidebarMenuButton>
         </DropdownMenuTrigger>
@@ -93,31 +101,35 @@ const NavUserAuthenticated = () => {
         >
           <DropdownMenuLabel className="p-0 font-normal">
             <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-              <UserAvatar user={user} />
+              <UserAvatar user={user} premiumProduct={premiumProduct} />
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
+          {premiumProduct ? null : (
+            <>
+              <DropdownMenuGroup>
+                <DropdownMenuItem asChild>
+                  <Link href="/pricing">
+                    <Sparkles />
+                    Upgrade to Pro
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+            </>
+          )}
           <DropdownMenuGroup>
             <DropdownMenuItem asChild>
-              <Link href="/upgrade">
-                <Sparkles />
-                Upgrade to Pro
+              <Link href="/account">
+                <BadgeCheck />
+                Account
               </Link>
             </DropdownMenuItem>
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator />
-          <DropdownMenuGroup>
-            <DropdownMenuItem>
-              <BadgeCheck />
-              Account
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <CreditCard />
-              Billing
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Bell />
-              Notifications
+            <DropdownMenuItem asChild>
+              <Link href="/pricing">
+                <CreditCard />
+                Billing
+              </Link>
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
@@ -133,11 +145,12 @@ const NavUserAuthenticated = () => {
 
 const UserAvatar = ({
   user,
+  premiumProduct,
 }: {
   user: Pick<User, "name" | "image" | "email"> | undefined;
+  premiumProduct: CustomerProduct | undefined;
 }) => {
   const shortName = user?.name?.substring(0, 2).toUpperCase();
-
   if (!user) {
     return (
       <>
@@ -157,7 +170,14 @@ const UserAvatar = ({
         <AvatarFallback className="rounded-lg">{shortName}</AvatarFallback>
       </Avatar>
       <div className="grid flex-1 text-left text-sm leading-tight">
-        <span className="truncate font-medium">{user?.name}</span>
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="truncate font-medium">{user?.name}</span>
+          {premiumProduct ? (
+            <span className="text-muted-foreground shrink-0 text-xs">
+              {premiumProduct.name}
+            </span>
+          ) : null}
+        </div>
         <span className="truncate text-xs">{user?.email}</span>
       </div>
     </>

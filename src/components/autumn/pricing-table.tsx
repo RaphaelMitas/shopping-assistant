@@ -1,6 +1,10 @@
 import React from "react";
 
-import { useCustomer, usePricingTable, ProductDetails } from "autumn-js/react";
+import {
+  useCustomer,
+  usePricingTable,
+  type ProductDetails,
+} from "autumn-js/react";
 import { createContext, useContext, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
@@ -22,8 +26,8 @@ export default function PricingTable({
 
   if (isLoading) {
     return (
-      <div className="w-full h-full flex justify-center items-center min-h-[300px]">
-        <Loader2 className="w-6 h-6 text-zinc-400 animate-spin" />
+      <div className="flex h-full min-h-[300px] w-full items-center justify-center">
+        <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
       </div>
     );
   }
@@ -34,8 +38,8 @@ export default function PricingTable({
 
   const intervals = Array.from(
     new Set(
-      products?.map((p) => p.properties?.interval_group).filter((i) => !!i)
-    )
+      products?.map((p) => p.properties?.interval_group).filter((i) => !!i),
+    ),
   );
 
   const multiInterval = intervals.length > 1;
@@ -101,7 +105,9 @@ const PricingTableContext = createContext<{
   showFeatures: boolean;
 }>({
   isAnnualToggle: false,
-  setIsAnnualToggle: () => {},
+  setIsAnnualToggle: () => {
+    /* empty */
+  },
   products: [],
   showFeatures: true,
 });
@@ -147,15 +153,12 @@ export const PricingTableContainer = ({
       value={{ isAnnualToggle, setIsAnnualToggle, products, showFeatures }}
     >
       <div
-        className={cn(
-          "flex items-center flex-col",
-          hasRecommended && "!py-10"
-        )}
+        className={cn("flex flex-col items-center", hasRecommended && "!py-10")}
       >
         {multiInterval && (
           <div
             className={cn(
-              products.some((p) => p.display?.recommend_text) && "mb-8"
+              products.some((p) => p.display?.recommend_text) && "mb-8",
             )}
           >
             <AnnualSwitch
@@ -166,8 +169,8 @@ export const PricingTableContainer = ({
         )}
         <div
           className={cn(
-            "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(200px,1fr))] w-full gap-2",
-            className
+            "grid w-full grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(200px,1fr))]",
+            className,
           )}
         >
           {children}
@@ -182,7 +185,11 @@ interface PricingCardProps {
   showFeatures?: boolean;
   className?: string;
   onButtonClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
-  buttonProps?: React.ComponentProps<"button">;
+  buttonProps?: Omit<React.ComponentProps<"button">, "onClick"> & {
+    onClick?: (
+      event: React.MouseEvent<HTMLButtonElement>,
+    ) => void | Promise<void>;
+  };
 }
 
 export const PricingCard = ({
@@ -207,7 +214,7 @@ export const PricingCard = ({
     ? {
         primary_text: "Free",
       }
-    : product.items[0].display;
+    : product.items[0]?.display;
 
   const featureItems = product.properties?.is_free
     ? product.items
@@ -216,10 +223,10 @@ export const PricingCard = ({
   return (
     <div
       className={cn(
-        " w-full h-full py-6 text-foreground border rounded-lg shadow-sm max-w-xl",
+        "text-foreground h-full w-full max-w-xl rounded-lg border py-6 shadow-sm",
         isRecommended &&
-          "lg:-translate-y-6 lg:shadow-lg dark:shadow-zinc-800/80 lg:h-[calc(100%+48px)] bg-secondary/40",
-        className
+          "bg-secondary/40 lg:h-[calc(100%+48px)] lg:-translate-y-6 lg:shadow-lg dark:shadow-zinc-800/80",
+        className,
       )}
     >
       {productDisplay?.recommend_text && (
@@ -227,30 +234,28 @@ export const PricingCard = ({
       )}
       <div
         className={cn(
-          "flex flex-col h-full flex-grow",
-          isRecommended && "lg:translate-y-6"
+          "flex h-full flex-grow flex-col",
+          isRecommended && "lg:translate-y-6",
         )}
       >
         <div className="h-full">
           <div className="flex flex-col">
             <div className="pb-4">
-              <h2 className="text-2xl font-semibold px-6 truncate">
-                {productDisplay?.name || name}
+              <h2 className="truncate px-6 text-2xl font-semibold">
+                {productDisplay?.name ?? name}
               </h2>
               {productDisplay?.description && (
-                <div className="text-sm text-muted-foreground px-6 h-8">
-                  <p className="line-clamp-2">
-                    {productDisplay?.description}
-                  </p>
+                <div className="text-muted-foreground h-8 px-6 text-sm">
+                  <p className="line-clamp-2">{productDisplay?.description}</p>
                 </div>
               )}
             </div>
             <div className="mb-2">
-              <h3 className="font-semibold h-16 flex px-6 items-center border-y mb-4 bg-secondary/40">
+              <h3 className="bg-secondary/40 mb-4 flex h-16 items-center border-y px-6 font-semibold">
                 <div className="line-clamp-2">
                   {mainPriceDisplay?.primary_text}{" "}
                   {mainPriceDisplay?.secondary_text && (
-                    <span className="font-normal text-muted-foreground mt-1">
+                    <span className="text-muted-foreground mt-1 font-normal">
                       {mainPriceDisplay?.secondary_text}
                     </span>
                   )}
@@ -259,7 +264,7 @@ export const PricingCard = ({
             </div>
           </div>
           {showFeatures && featureItems.length > 0 && (
-            <div className="flex-grow px-6 mb-6">
+            <div className="mb-6 flex-grow px-6">
               <PricingFeatureList
                 items={featureItems}
                 everythingFrom={product.display?.everything_from}
@@ -267,14 +272,12 @@ export const PricingCard = ({
             </div>
           )}
         </div>
-        <div
-          className={cn(" px-6 ", isRecommended && "lg:-translate-y-12")}
-        >
+        <div className={cn("px-6", isRecommended && "lg:-translate-y-12")}>
           <PricingCardButton
             recommended={productDisplay?.recommend_text ? true : false}
             {...buttonProps}
           >
-            {productDisplay?.button_text || buttonText}
+            {productDisplay?.button_text ?? buttonText}
           </PricingCardButton>
         </div>
       </div>
@@ -295,23 +298,18 @@ export const PricingFeatureList = ({
   return (
     <div className={cn("flex-grow", className)}>
       {everythingFrom && (
-        <p className="text-sm mb-4">
-          Everything from {everythingFrom}, plus:
-        </p>
+        <p className="mb-4 text-sm">Everything from {everythingFrom}, plus:</p>
       )}
       <div className="space-y-3">
         {items.map((item, index) => (
-          <div
-            key={index}
-            className="flex items-start gap-2 text-sm"
-          >
+          <div key={index} className="flex items-start gap-2 text-sm">
             {/* {showIcon && (
               <Check className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
             )} */}
             <div className="flex flex-col">
               <span>{item.display?.primary_text}</span>
               {item.display?.secondary_text && (
-                <span className="text-sm text-muted-foreground">
+                <span className="text-muted-foreground text-sm">
                   {item.display?.secondary_text}
                 </span>
               )}
@@ -324,9 +322,13 @@ export const PricingFeatureList = ({
 };
 
 // Pricing Card Button
-export interface PricingCardButtonProps extends React.ComponentProps<"button"> {
+export interface PricingCardButtonProps
+  extends Omit<React.ComponentProps<"button">, "onClick"> {
   recommended?: boolean;
   buttonUrl?: string;
+  onClick?: (
+    event: React.MouseEvent<HTMLButtonElement>,
+  ) => void | Promise<void>;
 }
 
 export const PricingCardButton = React.forwardRef<
@@ -349,8 +351,8 @@ export const PricingCardButton = React.forwardRef<
   return (
     <Button
       className={cn(
-        "w-full py-3 px-4 group overflow-hidden relative transition-all duration-300 hover:brightness-90 border rounded-lg",
-        className
+        "group relative w-full overflow-hidden rounded-lg border px-4 py-3 transition-all duration-300 hover:brightness-90",
+        className,
       )}
       {...props}
       variant={recommended ? "default" : "secondary"}
@@ -362,11 +364,11 @@ export const PricingCardButton = React.forwardRef<
         <Loader2 className="h-4 w-4 animate-spin" />
       ) : (
         <>
-          <div className="flex items-center justify-between w-full transition-transform duration-300 group-hover:translate-y-[-130%]">
+          <div className="flex w-full items-center justify-between transition-transform duration-300 group-hover:translate-y-[-130%]">
             <span>{children}</span>
             <span className="text-sm">→</span>
           </div>
-          <div className="flex items-center justify-between w-full absolute px-4 translate-y-[130%] transition-transform duration-300 group-hover:translate-y-0 mt-2 group-hover:mt-0">
+          <div className="absolute mt-2 flex w-full translate-y-[130%] items-center justify-between px-4 transition-transform duration-300 group-hover:mt-0 group-hover:translate-y-0">
             <span>{children}</span>
             <span className="text-sm">→</span>
           </div>
@@ -386,21 +388,21 @@ export const AnnualSwitch = ({
   setIsAnnualToggle: (isAnnual: boolean) => void;
 }) => {
   return (
-    <div className="flex items-center space-x-2 mb-4">
-      <span className="text-sm text-muted-foreground">Monthly</span>
+    <div className="mb-4 flex items-center space-x-2">
+      <span className="text-muted-foreground text-sm">Monthly</span>
       <Switch
         id="annual-billing"
         checked={isAnnualToggle}
         onCheckedChange={setIsAnnualToggle}
       />
-      <span className="text-sm text-muted-foreground">Annual</span>
+      <span className="text-muted-foreground text-sm">Annual</span>
     </div>
   );
 };
 
 export const RecommendedBadge = ({ recommended }: { recommended: string }) => {
   return (
-    <div className="bg-secondary absolute border text-muted-foreground text-sm font-medium lg:rounded-full px-3 lg:py-0.5 lg:top-4 lg:right-4 top-[-1px] right-[-1px] rounded-bl-lg">
+    <div className="bg-secondary text-muted-foreground absolute top-[-1px] right-[-1px] rounded-bl-lg border px-3 text-sm font-medium lg:top-4 lg:right-4 lg:rounded-full lg:py-0.5">
       {recommended}
     </div>
   );
