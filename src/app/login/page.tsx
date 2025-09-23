@@ -14,6 +14,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSeparator,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
 
 export default function Page() {
   const searchParams = useSearchParams();
@@ -106,15 +112,23 @@ export default function Page() {
                       {otpSending ? "Sending..." : "Send code"}
                     </Button>
                   </div>
-                  <Input
-                    id="otp"
-                    inputMode="numeric"
-                    placeholder="Enter 6-digit code"
+                  <InputOTP
+                    maxLength={6}
                     value={otpCode}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      setOtpCode(e.target.value)
-                    }
-                  />
+                    onChange={(value) => setOtpCode(value)}
+                  >
+                    <InputOTPGroup>
+                      <InputOTPSlot index={0} />
+                      <InputOTPSlot index={1} />
+                      <InputOTPSlot index={2} />
+                    </InputOTPGroup>
+                    <InputOTPSeparator />
+                    <InputOTPGroup>
+                      <InputOTPSlot index={3} />
+                      <InputOTPSlot index={4} />
+                      <InputOTPSlot index={5} />
+                    </InputOTPGroup>
+                  </InputOTP>
                   {otpStatus ? (
                     <p className="text-muted-foreground text-sm">{otpStatus}</p>
                   ) : null}
@@ -130,10 +144,10 @@ export default function Page() {
                           email: otpEmail,
                           otp: otpCode,
                         });
-                        if (result.data?.redirect) {
-                          router.push(result.data.url ?? redirectTo ?? "/");
+                        if (result.error) {
+                          setError(result.error.message ?? "Failed to sign in");
                         } else {
-                          setError(result.error?.message ?? "Failed to sign in");
+                          router.push(redirectTo ?? "/");
                         }
                       } catch (e) {
                         const message =

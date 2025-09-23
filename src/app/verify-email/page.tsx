@@ -26,6 +26,12 @@ import {
 } from "@/components/ui/form";
 import { useQuery } from "convex/react";
 import { api } from "convex/_generated/api";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSeparator,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
 
 const schema = z.object({
   email: z.string().email("Please enter a valid email"),
@@ -140,15 +146,23 @@ export default function VerifyEmailPage() {
           </CardContent>
           <CardFooter className="flex flex-col gap-3">
             <div className="flex w-full flex-col gap-2">
-              <Input
-                id="otp"
-                inputMode="numeric"
-                placeholder="Enter 6-digit code"
+              <InputOTP
+                maxLength={6}
                 value={otp}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setOtp(e.target.value)
-                }
-              />
+                onChange={(value) => setOtp(value)}
+              >
+                <InputOTPGroup>
+                  <InputOTPSlot index={0} />
+                  <InputOTPSlot index={1} />
+                  <InputOTPSlot index={2} />
+                </InputOTPGroup>
+                <InputOTPSeparator />
+                <InputOTPGroup>
+                  <InputOTPSlot index={3} />
+                  <InputOTPSlot index={4} />
+                  <InputOTPSlot index={5} />
+                </InputOTPGroup>
+              </InputOTP>
               <Button
                 disabled={!otp || form.formState.isSubmitting}
                 onClick={async () => {

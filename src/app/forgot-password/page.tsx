@@ -15,6 +15,12 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSeparator,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -71,15 +77,23 @@ export default function ForgotPasswordPage() {
                 {sending ? "Sending..." : "Send code"}
               </Button>
 
-              <Input
-                id="otp"
-                inputMode="numeric"
-                placeholder="Enter 6-digit code"
+              <InputOTP
+                maxLength={6}
                 value={otp}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setOtp(e.target.value)
-                }
-              />
+                onChange={(value) => setOtp(value)}
+              >
+                <InputOTPGroup>
+                  <InputOTPSlot index={0} />
+                  <InputOTPSlot index={1} />
+                  <InputOTPSlot index={2} />
+                </InputOTPGroup>
+                <InputOTPSeparator />
+                <InputOTPGroup>
+                  <InputOTPSlot index={3} />
+                  <InputOTPSlot index={4} />
+                  <InputOTPSlot index={5} />
+                </InputOTPGroup>
+              </InputOTP>
               <Input
                 id="new-password"
                 type="password"
