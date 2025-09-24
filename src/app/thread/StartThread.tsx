@@ -1,11 +1,19 @@
 "use client";
 import { StartChat } from "@/components/ai-elements/start-chat";
+
 import { useCallback } from "react";
+import { startThread } from "./startThreadActions";
+import { useRouter } from "next/navigation";
 
 export default function StartThread() {
-  const onSubmit = useCallback(async (query: string) => {
-    console.log("Customer wants to buy:", query);
-  }, []);
+  const router = useRouter();
+  const onSubmit = useCallback(
+    async (query: string) => {
+      const threadId = await startThread();
+      router.push(`/thread/${threadId}?q=${encodeURIComponent(query)}`);
+    },
+    [router],
+  );
 
   return (
     <div className="flex h-full items-center justify-center px-4">

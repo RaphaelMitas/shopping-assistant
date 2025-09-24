@@ -1,12 +1,7 @@
 "use client";
 
-import { ChevronRight, type LucideIcon } from "lucide-react";
+import { Trash2 } from "lucide-react";
 
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -14,64 +9,52 @@ import {
   SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
-import { DynamicIcon, type IconName } from "lucide-react/dynamic";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "convex/_generated/api";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
-export function NavMain({
-  items,
-}: {
-  items: {
-    title: string;
-    url: string;
-    icon: IconName;
-    isActive?: boolean;
-    items?: {
-      title: string;
-      url: string;
-    }[];
-  }[];
-}) {
+export function NavMain() {
+  const threadList = useQuery(api.threads.getThreadList);
+  const pathname = usePathname();
+  const deleteThread = useMutation(
+    api.threads.deleteThread,
+  ).withOptimisticUpdate((state, mutation) => {
+    const threadListState = state.getQuery(api.threads.getThreadList);
+    state.setQuery(
+      api.threads.getThreadList,
+      {},
+      threadListState?.filter((item) => item._id !== mutation.threadId),
+    );
+  });
+
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Chats</SidebarGroupLabel>
       <SidebarMenu>
-        {items.map((item) => (
-          <Collapsible key={item.title} asChild defaultOpen={item.isActive}>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip={item.title}>
-                <a href={item.url}>
-                  <DynamicIcon className="size-4" name={item.icon} />
-                  <span>{item.title}</span>
-                </a>
-              </SidebarMenuButton>
-              {item.items?.length ? (
-                <>
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuAction className="data-[state=open]:rotate-90">
-                      <ChevronRight />
-                      <span className="sr-only">Toggle</span>
-                    </SidebarMenuAction>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <SidebarMenuSub>
-                      {item.items?.map((subItem) => (
-                        <SidebarMenuSubItem key={subItem.title}>
-                          <SidebarMenuSubButton asChild>
-                            <a href={subItem.url}>
-                              <span>{subItem.title}</span>
-                            </a>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      ))}
-                    </SidebarMenuSub>
-                  </CollapsibleContent>
-                </>
-              ) : null}
-            </SidebarMenuItem>
-          </Collapsible>
+        {threadList?.map((item) => (
+          <SidebarMenuItem key={item._id}>
+            <SidebarMenuButton
+              asChild
+              tooltip={item.title}
+              isActive={pathname === `/thread/${item._id}`}
+            >
+              <Link href={`/thread/${item._id}`}>
+                {/* <DynamicIcon className="size-4" name={item.icon} /> */}
+                <span>{item.title ?? "New Chat"}</span>
+              </Link>
+            </SidebarMenuButton>
+            <SidebarMenuAction
+              onClick={async () => {
+                await deleteThread({ threadId: item._id });
+              }}
+              showOnHover
+              className="hover:text-destructive cursor-pointer"
+            >
+              <Trash2 />
+            </SidebarMenuAction>
+          </SidebarMenuItem>
         ))}
       </SidebarMenu>
     </SidebarGroup>

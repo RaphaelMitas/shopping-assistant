@@ -19,17 +19,8 @@ import type { ComponentProps } from "react";
 import Link from "next/link";
 
 const data: {
-  navMain: ComponentProps<typeof NavMain>["items"];
   navSecondary: ComponentProps<typeof NavSecondary>["items"];
 } = {
-  navMain: [
-    {
-      title: "Playground",
-      url: "#",
-      icon: "square-terminal",
-      isActive: true,
-    },
-  ],
   navSecondary: [
     {
       title: "Support",
@@ -69,7 +60,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>

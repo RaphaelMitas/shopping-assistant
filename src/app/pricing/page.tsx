@@ -28,6 +28,15 @@ const productDetails: ProductDetails[] = [
       secondaryText: "/month",
     },
   },
+
+  {
+    id: "top_up",
+    description: "For those of you who want to top up",
+    price: {
+      primaryText: "$10",
+      secondaryText: "/1000 tokens",
+    },
+  },
 ];
 
 export default function PricingPage() {

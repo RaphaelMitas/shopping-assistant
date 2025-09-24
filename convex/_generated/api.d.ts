@@ -16,7 +16,7 @@ import type * as emails_resetPassword from "../emails/resetPassword.js";
 import type * as emails_verifyEmail from "../emails/verifyEmail.js";
 import type * as firecrawl from "../firecrawl.js";
 import type * as http from "../http.js";
-import type * as shopping from "../shopping.js";
+import type * as threads from "../threads.js";
 import type * as users from "../users.js";
 
 import type {
@@ -42,7 +42,7 @@ declare const fullApi: ApiFromModules<{
   "emails/verifyEmail": typeof emails_verifyEmail;
   firecrawl: typeof firecrawl;
   http: typeof http;
-  shopping: typeof shopping;
+  threads: typeof threads;
   users: typeof users;
 }>;
 declare const fullApiWithMounts: typeof fullApi;

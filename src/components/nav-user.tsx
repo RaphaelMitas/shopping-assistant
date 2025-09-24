@@ -83,13 +83,16 @@ const NavUserAuthenticated = () => {
     (product) => product.status === "active",
   );
 
+  console.log(customer);
   return (
     <>
       {aiTokens.usage !== undefined && aiTokens.included_usage !== undefined ? (
         <SidebarMenuItem>
           <SidebarMenuButton size="lg" className="flex flex-col gap-2">
             AI Tokens used: {aiTokens.usage}/{aiTokens.included_usage}
-            <Progress value={aiTokens.usage} max={aiTokens.included_usage} />
+            <Progress
+              value={(aiTokens.usage / aiTokens.included_usage) * 100}
+            />
           </SidebarMenuButton>
         </SidebarMenuItem>
       ) : null}
