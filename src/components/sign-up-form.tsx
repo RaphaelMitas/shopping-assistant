@@ -55,9 +55,7 @@ export function SignUpForm({
     async (values: SignUpFormValues) => {
       if (onSubmit) {
         await onSubmit(values);
-        return;
       }
-      console.log("Sign up submit:", values);
     },
     [onSubmit],
   );

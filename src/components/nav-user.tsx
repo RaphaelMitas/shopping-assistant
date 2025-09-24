@@ -7,6 +7,7 @@ import {
   CreditCard,
   LogIn,
   LogOut,
+  MessageSquare,
   Sparkles,
 } from "lucide-react";
 
@@ -37,8 +38,9 @@ import { Skeleton } from "./ui/skeleton";
 import { authClient } from "@/lib/auth-client";
 import Link from "next/link";
 import type { User } from "better-auth";
-import { useCustomer } from "autumn-js/react";
+import { useCustomer, useEntity } from "autumn-js/react";
 import { type CustomerProduct } from "autumn-js";
+import { Progress } from "./ui/progress";
 
 export function NavUser() {
   return (
@@ -58,7 +60,7 @@ export function NavUser() {
       <AuthLoading>
         <SidebarMenuItem>
           <SidebarMenuButton size="lg" disabled>
-            <UserAvatar user={undefined} premiumProduct={undefined} />
+            <UserAvatar user={undefined} activeProduct={undefined} />
             <ChevronsUpDown className="ml-auto size-4" />
           </SidebarMenuButton>
         </SidebarMenuItem>
@@ -73,82 +75,93 @@ export function NavUser() {
 const NavUserAuthenticated = () => {
   const user = useQuery(api.users.getCurrentUser);
   const { isMobile } = useSidebar();
-  const { customer } = useCustomer();
+  const { customer, check } = useCustomer();
+  const { data: aiTokens } = check({ featureId: "ai_tokens" });
 
-  const premiumProduct = customer?.products
+  const activeProduct = customer?.products.find(
     // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
-    .filter((product) => product.status === "active")
-    .find((product) => product.id === "premium");
+    (product) => product.status === "active",
+  );
 
   return (
-    <SidebarMenuItem>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <SidebarMenuButton
-            size="lg"
-            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-            disabled={!user}
-          >
-            <UserAvatar user={user} premiumProduct={premiumProduct} />
-            <ChevronsUpDown className="ml-auto size-4" />
+    <>
+      {aiTokens.usage !== undefined && aiTokens.included_usage !== undefined ? (
+        <SidebarMenuItem>
+          <SidebarMenuButton size="lg" className="flex flex-col gap-2">
+            AI Tokens used: {aiTokens.usage}/{aiTokens.included_usage}
+            <Progress value={aiTokens.usage} max={aiTokens.included_usage} />
           </SidebarMenuButton>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-          side={isMobile ? "bottom" : "right"}
-          align="end"
-          sideOffset={4}
-        >
-          <DropdownMenuLabel className="p-0 font-normal">
-            <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-              <UserAvatar user={user} premiumProduct={premiumProduct} />
-            </div>
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {premiumProduct ? null : (
-            <>
-              <DropdownMenuGroup>
-                <DropdownMenuItem asChild>
-                  <Link href="/pricing">
-                    <Sparkles />
-                    Upgrade to Pro
-                  </Link>
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-            </>
-          )}
-          <DropdownMenuGroup>
-            <DropdownMenuItem asChild>
-              <Link href="/account">
-                <BadgeCheck />
-                Account
-              </Link>
+        </SidebarMenuItem>
+      ) : null}
+      <SidebarMenuItem>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <SidebarMenuButton
+              size="lg"
+              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              disabled={!user}
+            >
+              <UserAvatar user={user} activeProduct={activeProduct} />
+              <ChevronsUpDown className="ml-auto size-4" />
+            </SidebarMenuButton>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+            side={isMobile ? "bottom" : "right"}
+            align="end"
+            sideOffset={4}
+          >
+            <DropdownMenuLabel className="p-0 font-normal">
+              <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                <UserAvatar user={user} activeProduct={activeProduct} />
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {activeProduct?.id === "premium" ? null : (
+              <>
+                <DropdownMenuGroup>
+                  <DropdownMenuItem asChild>
+                    <Link href="/pricing">
+                      <Sparkles />
+                      Upgrade to Premium
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+              </>
+            )}
+            <DropdownMenuGroup>
+              <DropdownMenuItem asChild>
+                <Link href="/account">
+                  <BadgeCheck />
+                  Account
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/pricing">
+                  <CreditCard />
+                  Billing
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => authClient.signOut()}>
+              <LogOut />
+              Log out
             </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/pricing">
-                <CreditCard />
-                Billing
-              </Link>
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => authClient.signOut()}>
-            <LogOut />
-            Log out
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </SidebarMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </SidebarMenuItem>
+    </>
   );
 };
 
 const UserAvatar = ({
   user,
-  premiumProduct,
+  activeProduct: premiumProduct,
 }: {
   user: Pick<User, "name" | "image" | "email"> | undefined;
-  premiumProduct: CustomerProduct | undefined;
+  activeProduct: CustomerProduct | undefined;
 }) => {
   const shortName = user?.name?.substring(0, 2).toUpperCase();
   if (!user) {

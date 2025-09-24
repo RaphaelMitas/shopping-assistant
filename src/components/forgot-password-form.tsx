@@ -51,9 +51,7 @@ export function ForgotPasswordForm({
     async (values: ForgotPasswordValues) => {
       if (onSubmit) {
         await onSubmit(values);
-        return;
       }
-      console.log("Request password reset:", values.email);
     },
     [onSubmit],
   );

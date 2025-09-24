@@ -4,7 +4,6 @@ import { action } from "./_generated/server";
 import { v } from "convex/values";
 
 const apiKey = process.env.FIRECRAWL_API_KEY!;
-console.log(apiKey);
 
 const firecrawl = new Firecrawl({ apiKey });
 

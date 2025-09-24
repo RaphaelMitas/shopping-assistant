@@ -65,7 +65,7 @@ export function DeleteUserForm({
         await onSubmit(values);
         return;
       }
-      console.log("Delete user confirmed");
+      ("Delete user confirmed");
     },
     [onSubmit],
   );

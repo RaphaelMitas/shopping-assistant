@@ -136,7 +136,6 @@ export const deleteUser = mutation({
         },
         headers: await authComponent.getHeaders(ctx),
       });
-      console.log("deleteUser", result);
       if (result.success === false) {
         return {
           error: result.message,

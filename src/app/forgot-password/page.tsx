@@ -8,8 +8,7 @@ import { resetPassword } from "../actions";
 
 export default function ForgotPasswordPage() {
   const handleSubmit = async (values: ForgotPasswordValues) => {
-    const result = await resetPassword(values);
-    console.log(result);
+    await resetPassword(values);
   };
   return (
     <div className="flex h-full items-center justify-center px-4">
