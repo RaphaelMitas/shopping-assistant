@@ -2,12 +2,10 @@
 
 import {
   BadgeCheck,
-  Bell,
   ChevronsUpDown,
   CreditCard,
   LogIn,
   LogOut,
-  MessageSquare,
   Sparkles,
 } from "lucide-react";
 
@@ -38,7 +36,7 @@ import { Skeleton } from "./ui/skeleton";
 import { authClient } from "@/lib/auth-client";
 import Link from "next/link";
 import type { User } from "better-auth";
-import { useCustomer, useEntity } from "autumn-js/react";
+import { useCustomer } from "autumn-js/react";
 import { type CustomerProduct } from "autumn-js";
 import { Progress } from "./ui/progress";
 
@@ -83,7 +81,6 @@ const NavUserAuthenticated = () => {
     (product) => product.status === "active",
   );
 
-  console.log(customer);
   return (
     <>
       {aiTokens.usage !== undefined && aiTokens.included_usage !== undefined ? (

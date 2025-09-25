@@ -14,7 +14,6 @@ import {
   MessageAvatar,
   MessageContent,
 } from "@/components/ai-elements/message";
-import { Response } from "@/components/ai-elements/response";
 import {
   PromptInput,
   PromptInputBody,
@@ -30,36 +29,45 @@ import {
   PromptInputActionAddAttachments,
 } from "@/components/ai-elements/prompt-input";
 import { cn } from "@/lib/utils";
-import { useAction, useQuery } from "convex/react";
+import { useAction, useMutation } from "convex/react";
 import { api } from "convex/_generated/api";
-import {
-  redirect,
-  useParams,
-  useRouter,
-  useSearchParams,
-} from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useUIMessages } from "@convex-dev/agent/react";
+import SmoothResponse from "./SmoothResponse";
 
 export default function ThreadChatPage() {
   const params = useParams<{ "thread-id": string }>();
   const threadId = params["thread-id"];
   const searchParams = useSearchParams();
-  const messages = useQuery(api.threads.getThreadMessages, { threadId });
+  const messages = useUIMessages(
+    api.threads.getThreadMessages,
+    { threadId },
+    { initialNumItems: 10, stream: true },
+  );
   const [status, setStatus] = useState<ChatStatus | undefined>(undefined);
   const router = useRouter();
   const didSendInitialRef = useRef(false);
   const initialQueryRef = useRef<string | null>(null);
   initialQueryRef.current ??= searchParams.get("q");
-  const sendMessageToAgent = useAction(api.threads.sendMessageToAgent);
+  const sendMessageToAgent = useMutation(api.threads.sendMessageToAgent);
+  console.log(messages.results[messages.results.length - 1]);
 
   const submitTextMessage = useCallback(
     (text: string) => {
       setStatus("submitted");
-      sendMessageToAgent({ threadId, message: text })
+      const result = sendMessageToAgent({ threadId, message: text })
         .catch(() => {
           setStatus("error");
         })
         .finally(() => {
           setStatus("ready");
+        });
+      result
+        .then((result) => {
+          console.log(result);
+        })
+        .catch((error) => {
+          console.error(error);
         });
     },
     [sendMessageToAgent, threadId],
@@ -87,33 +95,27 @@ export default function ThreadChatPage() {
     submitTextMessage(query);
   }, [router, threadId, submitTextMessage]);
 
-  if (messages && "error" in messages) {
-    redirect("/thread");
-  }
+  // `messages` is guaranteed to be pagination-shaped with streams; no error union
 
   return (
     <div className={cn("flex h-full w-full flex-col")}>
       <Conversation className="bg-background">
-        {messages?.length === 0 ? (
+        {messages?.results.reverse().length === 0 ? (
           <ConversationEmptyState
             title="No messages yet"
             description="Ask anything about what you want to buy."
           />
         ) : (
           <ConversationContent>
-            {messages
+            {messages.results
               ?.map((m, index) => (
-                <Message
-                  key={`${m.id}-${index}`}
-                  from={index % 2 === 1 ? "user" : "assistant"}
-                >
-                  <MessageAvatar src="" name={index % 2 === 1 ? "You" : "AI"} />
+                <Message key={`${m.id}-${index}`} from={m.role}>
+                  <MessageAvatar
+                    src=""
+                    name={m.role === "user" ? "You" : "AI"}
+                  />
                   <MessageContent>
-                    {index % 2 === 1 ? (
-                      <Response>{m.text}</Response>
-                    ) : (
-                      <div className="whitespace-pre-wrap">{m.text}</div>
-                    )}
+                    <SmoothResponse text={m.text} />
                   </MessageContent>
                 </Message>
               ))

@@ -2,14 +2,15 @@ import { type GenericCtx } from "@convex-dev/better-auth";
 import { components } from "./_generated/api";
 import { Autumn } from "@useautumn/convex";
 import { type DataModel } from "./_generated/dataModel";
+import { authComponent } from "./auth";
 
 export const autumn = new Autumn(components.autumn, {
   secretKey: process.env.AUTUMN_SECRET_KEY ?? "",
   identify: async (ctx: GenericCtx<DataModel>) => {
-    const user = await ctx.auth.getUserIdentity();
+    const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) return null;
 
-    const userId = user.subject.split("|")[0];
+    const userId = user._id;
     return {
       customerId: userId,
       customerData: {
