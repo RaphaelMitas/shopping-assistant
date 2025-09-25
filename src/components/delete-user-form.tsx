@@ -65,7 +65,6 @@ export function DeleteUserForm({
         await onSubmit(values);
         return;
       }
-      ("Delete user confirmed");
     },
     [onSubmit],
   );

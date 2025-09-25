@@ -2,15 +2,12 @@ import { openai } from "@ai-sdk/openai";
 import { components, internal } from "./_generated/api";
 import {
   Agent,
-  DeltaStreamer,
   listUIMessages,
   syncStreams,
   vStreamArgs,
 } from "@convex-dev/agent";
 import {
   query,
-  action,
-  type ActionCtx,
   mutation,
   type MutationCtx,
   type GenericCtx,
@@ -19,14 +16,13 @@ import {
 import { v } from "convex/values";
 import { authComponent } from "./auth";
 import { autumn } from "./autumn";
-import { z } from "zod";
 import { paginationOptsValidator } from "convex/server";
 
 const agent = new Agent(components.agent, {
   name: "My Agent",
   languageModel: openai.chat("gpt-5-mini"),
   textEmbeddingModel: openai.textEmbedding("text-embedding-3-small"),
-  instructions: "You are a weather forecaster.",
+  instructions: "You are a shopping assistant.",
   maxSteps: 3,
 });
 
