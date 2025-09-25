@@ -31,11 +31,18 @@ const productDetails: ProductDetails[] = [
 
   {
     id: "top_up",
-    description: "For those of you who want to top up",
+    description: "For those of you who want to top up. ",
     price: {
       primaryText: "$10",
-      secondaryText: "/1000 tokens",
     },
+    items: [
+      {
+        featureId: "ai_tokens",
+        primaryText: "1000 AI tokens",
+        secondaryText:
+          "Only used after monthly credits are consumed. They do not expire.",
+      },
+    ],
   },
 ];
 

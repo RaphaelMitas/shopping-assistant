@@ -80,16 +80,15 @@ const NavUserAuthenticated = () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
     (product) => product.status === "active",
   );
+  const usage = (aiTokens?.included_usage ?? 0) - (aiTokens?.balance ?? 0);
 
   return (
     <>
       {aiTokens.usage !== undefined && aiTokens.included_usage !== undefined ? (
         <SidebarMenuItem>
           <SidebarMenuButton size="lg" className="flex flex-col gap-2">
-            AI Tokens used: {aiTokens.usage}/{aiTokens.included_usage}
-            <Progress
-              value={(aiTokens.usage / aiTokens.included_usage) * 100}
-            />
+            AI Tokens used: {usage}/{aiTokens.included_usage}
+            <Progress value={(usage / aiTokens.included_usage) * 100} />
           </SidebarMenuButton>
         </SidebarMenuItem>
       ) : null}

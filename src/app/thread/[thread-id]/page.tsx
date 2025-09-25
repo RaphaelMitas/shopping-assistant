@@ -29,11 +29,13 @@ import {
   PromptInputActionAddAttachments,
 } from "@/components/ai-elements/prompt-input";
 import { cn } from "@/lib/utils";
-import { useAction, useMutation } from "convex/react";
+import { useMutation } from "convex/react";
 import { api } from "convex/_generated/api";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useUIMessages } from "@convex-dev/agent/react";
 import SmoothResponse from "./SmoothResponse";
+import { useCustomer } from "autumn-js/react";
+import PaywallDialog from "@/components/autumn/paywall-dialog";
 
 export default function ThreadChatPage() {
   const params = useParams<{ "thread-id": string }>();
@@ -44,33 +46,38 @@ export default function ThreadChatPage() {
     { threadId },
     { initialNumItems: 10, stream: true },
   );
-  const [status, setStatus] = useState<ChatStatus | undefined>(undefined);
+  const [status, setStatus] = useState<ChatStatus>("ready");
   const router = useRouter();
   const didSendInitialRef = useRef(false);
   const initialQueryRef = useRef<string | null>(null);
   initialQueryRef.current ??= searchParams.get("q");
   const sendMessageToAgent = useMutation(api.threads.sendMessageToAgent);
-  console.log(messages.results[messages.results.length - 1]);
+  const { check } = useCustomer();
 
   const submitTextMessage = useCallback(
     (text: string) => {
+      const { data, error } = check({
+        featureId: "ai_tokens",
+        dialog: PaywallDialog,
+      });
+
+      if (error) {
+        setStatus("error");
+        return;
+      }
+      if (!data?.allowed) {
+        return;
+      }
       setStatus("submitted");
-      const result = sendMessageToAgent({ threadId, message: text })
+      sendMessageToAgent({ threadId, message: text })
         .catch(() => {
           setStatus("error");
         })
         .finally(() => {
           setStatus("ready");
         });
-      result
-        .then((result) => {
-          console.log(result);
-        })
-        .catch((error) => {
-          console.error(error);
-        });
     },
-    [sendMessageToAgent, threadId],
+    [check, sendMessageToAgent, threadId],
   );
 
   const handleSubmit = useCallback(
@@ -145,7 +152,10 @@ export default function ThreadChatPage() {
                   </PromptInputActionMenuContent>
                 </PromptInputActionMenu>
               </PromptInputTools>
-              <PromptInputSubmit status={status} />
+              <PromptInputSubmit
+                status={status}
+                disabled={status !== "ready"}
+              />
             </PromptInputToolbar>
           </PromptInputBody>
         </PromptInput>

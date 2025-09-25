@@ -123,7 +123,7 @@ export const sendMessageToAgentAsync = internalAction({
           const totalTokens = data.usage.totalTokens;
           await autumn.track(ctx, {
             featureId: "ai_tokens",
-            value: totalTokens ? Math.ceil(totalTokens / 100) : undefined,
+            value: totalTokens ? Math.ceil(totalTokens / 1000) : undefined,
             properties: {
               threadId,
               functionName: "sendMessageToAgent",
