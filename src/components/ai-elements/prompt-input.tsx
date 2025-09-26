@@ -440,7 +440,7 @@ export const PromptInput = ({
       />
       <form
         className={cn(
-          "bg-background w-full divide-y overflow-hidden rounded-xl border shadow-sm",
+          "bg-background/95 w-full divide-y overflow-hidden rounded-xl border shadow-sm",
           className,
         )}
         onSubmit={handleSubmit}
@@ -542,7 +542,7 @@ export const PromptInputToolbar = ({
   ...props
 }: PromptInputToolbarProps) => (
   <div
-    className={cn("flex items-center justify-between p-1", className)}
+    className={cn("flex items-center justify-between p-2", className)}
     {...props}
   />
 );

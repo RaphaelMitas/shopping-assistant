@@ -15,14 +15,31 @@ import {
 } from "./_generated/server";
 import { v } from "convex/values";
 import { authComponent } from "./auth";
-import { autumn } from "./autumn";
 import { paginationOptsValidator } from "convex/server";
+import { autumn } from "./autumn";
+import { generateObjectSchema } from "../src/lib/zod/thread";
 
-const agent = new Agent(components.agent, {
+export const agent = new Agent(components.agent, {
+  usageHandler: async (ctx, data) => {
+    const totalTokens = data.usage.totalTokens;
+    await autumn.track(ctx, {
+      featureId: "ai_tokens",
+      value: totalTokens ? Math.ceil(totalTokens / 100) : undefined,
+      properties: {
+        threadId: data.threadId,
+        type: "agent-gpt-5-mini",
+      },
+    });
+  },
   name: "My Agent",
   languageModel: openai.chat("gpt-5-mini"),
-  textEmbeddingModel: openai.textEmbedding("text-embedding-3-small"),
-  instructions: "You are a shopping assistant.",
+  // textEmbeddingModel: openai.textEmbedding("text-embedding-3-small"),
+  instructions: `You are a shopping assistant. 
+    First ask the user for details about what they want to buy and 
+    Use the icon field to display the icon of the choice.
+    Ask only one question at a time. Use short answers like in a quiz.
+     Make sure to adhere to the schema.`,
+  // tools: { searchWebTool },
   maxSteps: 3,
 });
 
@@ -112,29 +129,11 @@ export const sendMessageToAgentAsync = internalAction({
 
     const { thread } = await agent.continueThread(scopedCtx, { threadId });
     await thread.updateMetadata({ title: "Shopping Assistant" });
-    const result = await thread.streamText(
-      { promptMessageId },
-      {
-        usageHandler: async (ctx, data) => {
-          const totalTokens = data.usage.totalTokens;
-          await autumn.track(ctx, {
-            featureId: "ai_tokens",
-            value: totalTokens ? Math.ceil(totalTokens / 1000) : undefined,
-            properties: {
-              threadId,
-              functionName: "sendMessageToAgent",
-            },
-          });
-        },
-        saveStreamDeltas: true,
-      },
-    );
-
-    // We need to make sure the stream finishes - by awaiting each chunk
-    // or using this call to consume it all.
-    await result.consumeStream();
-
-    return { totalTokens: (await result.totalUsage).totalTokens };
+    await thread.generateObject({
+      promptMessageId,
+      schema: generateObjectSchema,
+      maxRetries: 3,
+    });
   },
 });
 

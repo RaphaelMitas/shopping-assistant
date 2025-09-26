@@ -33,7 +33,7 @@ import { useMutation } from "convex/react";
 import { api } from "convex/_generated/api";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useUIMessages } from "@convex-dev/agent/react";
-import SmoothResponse from "./SmoothResponse";
+import ParsedMessage from "./ParsedMessage";
 import { useCustomer } from "autumn-js/react";
 import PaywallDialog from "@/components/autumn/paywall-dialog";
 
@@ -102,11 +102,9 @@ export default function ThreadChatPage() {
     submitTextMessage(query);
   }, [router, threadId, submitTextMessage]);
 
-  // `messages` is guaranteed to be pagination-shaped with streams; no error union
-
   return (
-    <div className={cn("flex h-full w-full flex-col")}>
-      <Conversation className="bg-background">
+    <div className={cn("flex h-full w-full flex-col overflow-y-auto")}>
+      <Conversation>
         {messages?.results.reverse().length === 0 ? (
           <ConversationEmptyState
             title="No messages yet"
@@ -122,7 +120,7 @@ export default function ThreadChatPage() {
                     name={m.role === "user" ? "You" : "AI"}
                   />
                   <MessageContent>
-                    <SmoothResponse text={m.text} />
+                    <ParsedMessage message={m} threadId={threadId} />
                   </MessageContent>
                 </Message>
               ))
@@ -132,11 +130,8 @@ export default function ThreadChatPage() {
         <ConversationScrollButton />
       </Conversation>
 
-      <div className="sticky bottom-0 z-10 mx-auto w-full max-w-3xl p-4">
-        <PromptInput
-          onSubmit={handleSubmit}
-          className="bg-card border-border border"
-        >
+      <div className="sticky bottom-0 z-10 mx-auto mb-1 w-full max-w-3xl rounded-2xl p-1 backdrop-blur-sm md:bottom-2">
+        <PromptInput onSubmit={handleSubmit}>
           <PromptInputAttachments>
             {(file) => <PromptInputAttachment data={file} />}
           </PromptInputAttachments>
