@@ -2,7 +2,7 @@
 import { Firecrawl } from "@mendable/firecrawl-js";
 import { internalAction } from "./_generated/server";
 import { v } from "convex/values";
-import { searchWebSchema } from "./tools";
+import { searchWebResultSchema } from "../src/lib/zod/thread";
 
 const apiKey = process.env.FIRECRAWL_API_KEY!;
 
@@ -15,15 +15,17 @@ const searchWeb = async (query: string) => {
     scrapeOptions: {
       blockAds: true,
       formats: [
+        "screenshot",
         {
           type: "json",
-          schema: searchWebSchema,
+          schema: searchWebResultSchema,
         },
       ],
     },
   });
+  console.log("FIRECRAWL RESULT", result);
 
-  const resultParsed = searchWebSchema.safeParse(
+  const resultParsed = searchWebResultSchema.safeParse(
     result.web?.map((item) => ({
       url: typeof item === "object" && "url" in item ? (item.url ?? "") : "",
       title:
@@ -32,10 +34,12 @@ const searchWeb = async (query: string) => {
         typeof item === "object" && "description" in item
           ? (item.description ?? "")
           : "",
+      screenshot:
+        typeof item === "object" && "screenshot" in item
+          ? (item.screenshot ?? "")
+          : "",
     })) ?? [],
   );
-
-  console.log("result", result);
 
   return resultParsed.success ? resultParsed.data : [];
 };
@@ -49,6 +53,7 @@ export const searchWebAction = internalAction({
       url: v.string(),
       title: v.string(),
       description: v.string(),
+      screenshot: v.string(),
     }),
   ),
   handler: async (ctx, args) => {

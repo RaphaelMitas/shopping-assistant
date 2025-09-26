@@ -2,17 +2,11 @@ import { createTool } from "@convex-dev/agent";
 import { z } from "zod";
 import { autumn } from "./autumn";
 import { internal } from "./_generated/api";
+import { searchWebResultSchema } from "../src/lib/zod/thread";
 
-export const searchWebItemSchema = z.object({
-  url: z.string(),
-  title: z.string(),
-  description: z.string(),
-});
-
-export const searchWebSchema = z.array(searchWebItemSchema);
-
-export const searchWebTool = createTool({
-  description: "Search for ideas in the database",
+export const firecrawlSearchWebTool = createTool({
+  description:
+    "This is the Firecrawl search web tool. Search the web for information. Return the results in the searchWebResultSchema.",
   providerOptions: {},
   args: z.object({ query: z.string().describe("The query to search for") }),
   handler: async (ctx, args, _options) => {
@@ -28,12 +22,12 @@ export const searchWebTool = createTool({
 
     const result = (await ctx.runAction(internal.firecrawl.searchWebAction, {
       query: args.query,
-    })) as unknown as typeof searchWebSchema;
-    const validatedResult = searchWebSchema.parse(result);
+    })) as unknown as typeof searchWebResultSchema;
+    const validatedResult = searchWebResultSchema.parse(result);
 
     await autumn.track(ctx, {
       featureId: "ai_tokens",
-      value: validatedResult.length + 5,
+      value: validatedResult.length * 5,
       properties: {
         type: "searchWebTool",
       },

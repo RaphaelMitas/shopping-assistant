@@ -18,6 +18,7 @@ import { authComponent } from "./auth";
 import { paginationOptsValidator } from "convex/server";
 import { autumn } from "./autumn";
 import { generateObjectSchema } from "../src/lib/zod/thread";
+import { firecrawlSearchWebTool } from "./tools";
 
 export const agent = new Agent(components.agent, {
   usageHandler: async (ctx, data) => {
@@ -27,19 +28,23 @@ export const agent = new Agent(components.agent, {
       value: totalTokens ? Math.ceil(totalTokens / 100) : undefined,
       properties: {
         threadId: data.threadId,
-        type: "agent-gpt-5-mini",
+        type: "agent-gpt-5",
       },
     });
   },
   name: "My Agent",
-  languageModel: openai.chat("gpt-5-mini"),
+  languageModel: openai.chat("gpt-5"),
   // textEmbeddingModel: openai.textEmbedding("text-embedding-3-small"),
   instructions: `You are a shopping assistant. 
     First ask the user for details about what they want to buy and 
     Use the icon field to display the icon of the choice.
     Ask only one question at a time. Use short answers like in a quiz.
-     Make sure to adhere to the schema.`,
-  // tools: { searchWebTool },
+
+    Once you have enough information, craft a search query and use the firecrawlSearchWebTool to find the best products.
+    The firecrawlSearchWebTool will return a list of Websites. 
+    Only then return this data in the searchWeb schema.
+    Make sure to adhere to the schema.`,
+  tools: { firecrawlSearchWebTool },
   maxSteps: 3,
 });
 

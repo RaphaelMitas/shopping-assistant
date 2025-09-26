@@ -4,23 +4,25 @@ import { type UIMessage } from "@convex-dev/agent/react";
 import { api } from "convex/_generated/api";
 import { useMutation } from "convex/react";
 import { DynamicIcon } from "lucide-react/dynamic";
+import ChoiceButtons from "./ChoiceButtons";
+import WebResultCarousel from "./WebResultCarousel";
 
 const parseMessage = (message: UIMessage) => {
   try {
-    const choiceMessage = generateObjectSchema.safeParse(
+    const { data, success } = generateObjectSchema.safeParse(
       JSON.parse(message.text),
     );
-    return choiceMessage.success
+    return success
       ? {
-          choiceMessage: choiceMessage.data,
+          object: data.result,
           textMessage: null,
         }
       : {
-          choiceMessage: null,
+          object: null,
           textMessage: message.text,
         };
   } catch {
-    return { textMessage: message.text, choiceMessage: null };
+    return { textMessage: message.text, object: null };
   }
 };
 
@@ -31,44 +33,23 @@ const ParsedMessage = ({
   message: UIMessage;
   threadId: string;
 }) => {
-  const { choiceMessage, textMessage } = parseMessage(message);
+  const { object, textMessage } = parseMessage(message);
 
-  if (textMessage !== null) {
-    return <div>{textMessage}</div>;
+  if (object?.type === "choice") {
+    return (
+      <ChoiceButtons
+        question={object.question}
+        choices={object.choices}
+        threadId={threadId}
+      />
+    );
   }
 
-  return (
-    <div className="flex flex-col gap-2">
-      {choiceMessage.question}
-      <div className="grid grid-cols-1 gap-1 md:grid-cols-2">
-        {choiceMessage.choices.map((choice) => (
-          <ChoiceCard key={choice.label} choice={choice} threadId={threadId} />
-        ))}
-      </div>
-    </div>
-  );
+  if (object?.type === "searchWeb") {
+    return <WebResultCarousel results={object.results} />;
+  }
+
+  return <div>{textMessage}</div>;
 };
 
 export default ParsedMessage;
-
-const ChoiceCard = ({
-  choice,
-  threadId,
-}: {
-  choice: Choice;
-  threadId: string;
-}) => {
-  const sendMessageToAgent = useMutation(api.threads.sendMessageToAgent);
-
-  return (
-    <Button
-      className="flex h-full w-full cursor-pointer flex-col items-center gap-2 whitespace-normal"
-      onClick={() => sendMessageToAgent({ threadId, message: choice.label })}
-    >
-      {/* <Card className="bg-primary-foreground group/choice-card hover:bg-primary flex cursor-pointer flex-col items-center gap-2 p-4"> */}
-      <DynamicIcon className="size-6" name={choice.icon} />
-      <div className="text-sm">{choice.label}</div>
-      {/* </Card> */}
-    </Button>
-  );
-};

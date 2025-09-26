@@ -103,7 +103,11 @@ export default function ThreadChatPage() {
   }, [router, threadId, submitTextMessage]);
 
   return (
-    <div className={cn("flex h-full w-full flex-col overflow-y-auto")}>
+    <div
+      className={cn(
+        "mx-auto flex h-full w-full max-w-3xl flex-col overflow-y-auto",
+      )}
+    >
       <Conversation>
         {messages?.results.reverse().length === 0 ? (
           <ConversationEmptyState
@@ -119,7 +123,7 @@ export default function ThreadChatPage() {
                     src=""
                     name={m.role === "user" ? "You" : "AI"}
                   />
-                  <MessageContent>
+                  <MessageContent className="max-w-[75%]">
                     <ParsedMessage message={m} threadId={threadId} />
                   </MessageContent>
                 </Message>
