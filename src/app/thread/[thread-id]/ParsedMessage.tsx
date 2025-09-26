@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { generateObjectSchema, type Choice } from "@/lib/zod/thread";
 import { type UIMessage } from "@convex-dev/agent/react";
 import { api } from "convex/_generated/api";
@@ -20,7 +19,7 @@ const parseMessage = (message: UIMessage) => {
           choiceMessage: null,
           textMessage: message.text,
         };
-  } catch (error) {
+  } catch {
     return { textMessage: message.text, choiceMessage: null };
   }
 };

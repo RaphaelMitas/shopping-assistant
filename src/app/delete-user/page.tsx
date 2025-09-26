@@ -14,7 +14,7 @@ export default function DeleteUserPage() {
   const { isAuthenticated, isLoading } = useConvexAuth();
   const [error, setError] = useState<string | undefined>();
   if (!isLoading && !isAuthenticated) {
-    redirect("/login?redirectTo=/delete-user");
+    redirect("/login?redirect_to=/delete-user");
   }
 
   const handleSubmit = async (_values: DeleteUserValues) => {

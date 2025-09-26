@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,6 +24,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { LoaderCircle } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email"),
@@ -32,20 +33,15 @@ const loginSchema = z.object({
 
 export type LoginFormValues = z.infer<typeof loginSchema>;
 
-export type LoginFormProps = Omit<React.ComponentProps<"div">, "onSubmit"> & {
-  onSubmit?: (values: LoginFormValues) => void | Promise<void>;
-  submitError?: string;
-};
+export type LoginFormProps = Omit<React.ComponentProps<"div">, "onSubmit">;
 
-export function LoginForm({
-  className,
-  onSubmit,
-  submitError,
-  ...props
-}: LoginFormProps) {
+export function LoginForm({ className, ...props }: LoginFormProps) {
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirectTo");
+  const redirect_to = searchParams.get("redirect_to");
+  const router = useRouter();
+  const [error, setError] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(false);
+
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -55,17 +51,34 @@ export function LoginForm({
     mode: "onSubmit",
   });
 
-  const handleSubmit = useCallback(
-    async (values: LoginFormValues) => {
-      setLoading(true);
-      if (onSubmit) {
-        await onSubmit(values);
+  const handleSubmit = async (values: LoginFormValues): Promise<void> => {
+    setLoading(true);
+    setError(undefined);
+    try {
+      const result = await authClient.signIn.email({
+        email: values.email,
+        password: values.password,
+        callbackURL: redirect_to ?? "/",
+      });
+      if (result.data?.redirect) {
+        router.push(result.data.url ?? "/");
+      } else {
+        if (result.error?.code === "EMAIL_NOT_VERIFIED") {
+          const verifyUrl = `/verify-email?email=${encodeURIComponent(
+            values.email,
+          )}${redirect_to ? `&redirect_to=${encodeURIComponent(redirect_to)}` : ""}`;
+          router.push(verifyUrl);
+          return;
+        }
+        setError(result.error?.message ?? "Failed to sign in");
       }
-
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Failed to sign in";
+      setError(message);
       setLoading(false);
-    },
-    [onSubmit],
-  );
+    }
+    setLoading(false);
+  };
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -124,7 +137,7 @@ export function LoginForm({
                     </FormItem>
                   )}
                 />
-                <FormMessage>{submitError}</FormMessage>
+                <FormMessage>{error}</FormMessage>
                 <div className="flex flex-col gap-3">
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? (
@@ -139,8 +152,8 @@ export function LoginForm({
                 Don&apos;t have an account?{" "}
                 <a
                   href={
-                    redirectTo
-                      ? `/sign-up?redirectTo=${encodeURIComponent(redirectTo)}`
+                    redirect_to
+                      ? `/sign-up?redirect_to=${encodeURIComponent(redirect_to)}`
                       : "/sign-up"
                   }
                   className="underline underline-offset-4"

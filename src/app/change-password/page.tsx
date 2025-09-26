@@ -13,7 +13,7 @@ export default function ChangePasswordPage() {
   const { isAuthenticated, isLoading } = useConvexAuth();
   const [error, setError] = useState<string | undefined>();
   if (!isLoading && !isAuthenticated) {
-    redirect("/login?redirectTo=/change-password");
+    redirect("/login?redirect_to=/change-password");
   }
   const handleSubmit = async (values: ChangePasswordValues) => {
     const result = await updatePassword(values);

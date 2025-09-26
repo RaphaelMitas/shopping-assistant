@@ -15,7 +15,6 @@ import { api } from "convex/_generated/api";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback } from "react";
-import { startThread } from "@/app/thread/startThreadActions";
 import { nanoid } from "nanoid";
 
 export function NavMain() {
@@ -33,7 +32,7 @@ export function NavMain() {
   });
   const startThreadMutation = useMutation(
     api.threads.createThread,
-  ).withOptimisticUpdate((state, mutation) => {
+  ).withOptimisticUpdate((state) => {
     const threadListState = state.getQuery(api.threads.getThreadList) ?? [];
     const id = nanoid();
     state.setQuery(api.threads.getThreadList, {}, [

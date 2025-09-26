@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,6 +23,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { signUp } from "@/app/actions";
 
 const signUpSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -32,33 +33,32 @@ const signUpSchema = z.object({
 
 export type SignUpFormValues = z.infer<typeof signUpSchema>;
 
-export type SignUpFormProps = Omit<React.ComponentProps<"div">, "onSubmit"> & {
-  onSubmit?: (values: SignUpFormValues) => void | Promise<void>;
-  submitError?: string;
-};
+export type SignUpFormProps = Omit<React.ComponentProps<"div">, "onSubmit">;
 
-export function SignUpForm({
-  className,
-  onSubmit,
-  submitError,
-  ...props
-}: SignUpFormProps) {
+export function SignUpForm({ className, ...props }: SignUpFormProps) {
+  const [error, setError] = useState<string | undefined>();
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirectTo");
+  const redirect_to = searchParams.get("redirect_to");
+
   const form = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpSchema),
     defaultValues: { name: "", email: "", password: "" },
     mode: "onSubmit",
   });
 
-  const handleSubmit = useCallback(
-    async (values: SignUpFormValues) => {
-      if (onSubmit) {
-        await onSubmit(values);
-      }
-    },
-    [onSubmit],
-  );
+  const handleSubmit = async (values: SignUpFormValues): Promise<void> => {
+    const result = await signUp(values);
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
+    router.push(
+      `/sign-up/success?email=${encodeURIComponent(values.email)}${
+        redirect_to ? `&redirect_to=${encodeURIComponent(redirect_to)}` : ""
+      }`,
+    );
+  };
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -135,7 +135,7 @@ export function SignUpForm({
                     </FormItem>
                   )}
                 />
-                <FormMessage>{submitError}</FormMessage>
+                <FormMessage>{error}</FormMessage>
                 <div className="flex flex-col gap-3">
                   <Button type="submit" className="w-full">
                     Sign up
@@ -146,8 +146,8 @@ export function SignUpForm({
                 Already have an account? {""}
                 <a
                   href={
-                    redirectTo
-                      ? `/login?redirectTo=${encodeURIComponent(redirectTo)}`
+                    redirect_to
+                      ? `/login?redirect_to=${encodeURIComponent(redirect_to)}`
                       : "/login"
                   }
                   className="underline underline-offset-4"

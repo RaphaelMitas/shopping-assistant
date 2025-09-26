@@ -1,17 +1,12 @@
 "use node";
 import { Firecrawl } from "@mendable/firecrawl-js";
-import { action, internalAction } from "./_generated/server";
+import { internalAction } from "./_generated/server";
 import { v } from "convex/values";
-import { searchWebSchema, type searchWebItemSchema } from "./tools";
-import type z from "zod";
+import { searchWebSchema } from "./tools";
 
 const apiKey = process.env.FIRECRAWL_API_KEY!;
 
 const firecrawl = new Firecrawl({ apiKey });
-
-type searchWebResult = z.infer<typeof searchWebSchema>;
-
-type searchWebItem = z.infer<typeof searchWebItemSchema>;
 
 const searchWeb = async (query: string) => {
   const result = await firecrawl.search(query, {

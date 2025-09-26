@@ -1,63 +1,64 @@
-"use client";
-
-import { useMemo } from "react";
-import { useSearchParams } from "next/navigation";
-import Link from "next/link";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import {
+  CheckEmailDescription,
+  GoToVerificationButton,
+  LoginLink,
+} from "./SuccessPageElements";
+import { Suspense } from "react";
+import { LoginLinkWithRedirect } from "@/components/utils/loginLinkWithRedirect";
 
-export default function SignUpSuccessPage() {
-  const searchParams = useSearchParams();
-  const email = useMemo(() => searchParams.get("email") ?? "", [searchParams]);
-  const redirectTo = useMemo(
-    () => searchParams.get("redirectTo") ?? "",
-    [searchParams],
-  );
-
+export default function SignUpSuccessPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ email?: string; redirect_to?: string }>;
+}) {
   return (
     <div className="flex h-full items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <Card>
           <CardHeader>
             <CardTitle>Check your email</CardTitle>
-            <CardDescription>
-              We sent a verification link to {email || "your email"}. Verify
-              your email to finish creating your account.
-            </CardDescription>
+            <Suspense
+              fallback={
+                <CheckEmailDescription
+                  searchParams={Promise.resolve({ email: "your email" })}
+                />
+              }
+            >
+              <CheckEmailDescription searchParams={searchParams} />
+            </Suspense>
           </CardHeader>
           <CardContent className="text-muted-foreground text-sm">
             Didn&apos;t get the email? It may take a couple of minutes. You can
             also resend it from the verification page.
           </CardContent>
           <CardFooter className="flex flex-col gap-3">
-            <Link
-              href={`/verify-email?email=${encodeURIComponent(email)}${
-                redirectTo
-                  ? `&redirectTo=${encodeURIComponent(redirectTo)}`
-                  : ""
-              }`}
+            <Suspense
+              fallback={
+                <GoToVerificationButton
+                  searchParams={Promise.resolve({ email: undefined })}
+                />
+              }
             >
-              <Button className="w-full">Go to verification</Button>
-            </Link>
+              <GoToVerificationButton searchParams={searchParams} />
+            </Suspense>
             <p className="text-muted-foreground text-center text-sm">
               Already verified?{" "}
-              <a
-                href={
-                  redirectTo
-                    ? `/login?redirectTo=${encodeURIComponent(redirectTo)}`
-                    : "/login"
+              <Suspense
+                fallback={
+                  <LoginLinkWithRedirect
+                    searchParams={Promise.resolve({ redirect_to: undefined })}
+                  />
                 }
-                className="underline underline-offset-4"
               >
-                Login
-              </a>
+                <LoginLinkWithRedirect searchParams={searchParams} />
+              </Suspense>
             </p>
           </CardFooter>
         </Card>

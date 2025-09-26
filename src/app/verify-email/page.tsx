@@ -1,11 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useMemo } from "react";
 import { redirect, useSearchParams } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { sendVerifyEmail } from "../actions";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -15,61 +11,18 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { useQuery } from "convex/react";
 import { api } from "convex/_generated/api";
+import { VerifyEmailForm } from "./VerifyEmailForm";
+import { LoginLinkWithRedirect } from "@/components/utils/loginLinkWithRedirect";
+import { RedirectToButton } from "./RedirectToButton";
 
-const schema = z.object({
-  email: z.string().email("Please enter a valid email"),
-});
-
-type FormValues = z.infer<typeof schema>;
-
-export default function VerifyEmailPage() {
-  const searchParams = useSearchParams();
-  const initialEmail = useMemo(
-    () => searchParams.get("email") ?? "",
-    [searchParams],
-  );
-  const redirectTo = useMemo(
-    () => searchParams.get("redirectTo") ?? "/",
-    [searchParams],
-  );
-  const [status, setStatus] = useState<string | undefined>(undefined);
-  const [submitError, setSubmitError] = useState<string | undefined>(undefined);
+export default function VerifyEmailPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ email?: string; redirect_to?: string }>;
+}) {
   const user = useQuery(api.users.getCurrentUser);
-
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: { email: initialEmail },
-    mode: "onSubmit",
-  });
-
-  const onResend = async (values: FormValues) => {
-    setStatus(undefined);
-    setSubmitError(undefined);
-    try {
-      const result = await sendVerifyEmail({ email: values.email });
-      if (result?.error) {
-        setSubmitError(result.error);
-      } else {
-        setStatus("Verification email sent. Please check your inbox.");
-      }
-    } catch (e) {
-      const message = e instanceof Error ? e.message : "Failed to send email";
-      setSubmitError(message);
-    }
-  };
-
-  const isSubmitting = form.formState.isSubmitting;
   const isVerified = user?.emailVerified;
 
   if (isVerified) {
@@ -84,7 +37,9 @@ export default function VerifyEmailPage() {
               </CardDescription>
             </CardHeader>
             <CardFooter>
-              <Button onClick={() => redirect(redirectTo)}>Continue</Button>
+              <Suspense fallback={<div>Loading...</div>}>
+                <RedirectToButton searchParams={searchParams} />
+              </Suspense>
             </CardFooter>
           </Card>
         </div>
@@ -104,56 +59,28 @@ export default function VerifyEmailPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onResend)}
-                className="flex flex-col gap-4"
-              >
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input
-                          id="email"
-                          type="email"
-                          placeholder="m@example.com"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+            <Suspense
+              fallback={
+                <VerifyEmailForm
+                  searchParams={Promise.resolve({ email: undefined })}
                 />
-                {status ? (
-                  <p className="text-muted-foreground text-sm">{status}</p>
-                ) : null}
-                {submitError ? <FormMessage>{submitError}</FormMessage> : null}
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "Sending..." : "Resend verification email"}
-                </Button>
-              </form>
-            </Form>
+              }
+            >
+              <VerifyEmailForm searchParams={searchParams} />
+            </Suspense>
           </CardContent>
           <CardFooter className="flex flex-col gap-3">
             <p className="text-muted-foreground text-center text-sm">
               Already verified?{" "}
-              <a
-                href={
-                  redirectTo
-                    ? `/login?redirectTo=${encodeURIComponent(redirectTo)}`
-                    : "/login"
+              <Suspense
+                fallback={
+                  <LoginLinkWithRedirect
+                    searchParams={Promise.resolve({ redirect_to: undefined })}
+                  />
                 }
-                className="underline underline-offset-4"
               >
-                Login
-              </a>
+                <LoginLinkWithRedirect searchParams={searchParams} />
+              </Suspense>
             </p>
           </CardFooter>
         </Card>

@@ -15,7 +15,7 @@ export const searchWebTool = createTool({
   description: "Search for ideas in the database",
   providerOptions: {},
   args: z.object({ query: z.string().describe("The query to search for") }),
-  handler: async (ctx, args, options) => {
+  handler: async (ctx, args, _options) => {
     const { data, error } = await autumn.check(ctx, {
       featureId: "ai_tokens",
     });
