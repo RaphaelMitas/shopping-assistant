@@ -29,10 +29,25 @@ export const createAuth = (
       sendOnSignUp: true,
       autoSignInAfterVerification: true,
       sendVerificationEmail: async ({ user, url }) => {
-        await sendEmailVerification(requireActionCtx(ctx), {
-          to: user.email,
-          url,
-        });
+        const actionCtx = requireActionCtx(ctx);
+        const all = await actionCtx.db.query("verificationUrls").collect();
+        const existing = all.find((d: any) => d.email === user.email) as
+          | (Record<string, any> & { _id: any })
+          | undefined;
+        if (existing) {
+          await actionCtx.db.patch(existing._id, {
+            url,
+            updatedAt: Date.now(),
+          });
+        } else {
+          await actionCtx.db.insert("verificationUrls", {
+            email: user.email,
+            url,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          });
+        }
+        // Do not send magic link email; OTP flow will deliver a code instead.
       },
     },
     emailAndPassword: {
