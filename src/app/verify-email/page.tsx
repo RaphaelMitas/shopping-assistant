@@ -1,8 +1,6 @@
 "use client";
 
-import { Suspense, useMemo } from "react";
-import { redirect, useSearchParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { Suspense } from "react";
 import {
   Card,
   CardContent,

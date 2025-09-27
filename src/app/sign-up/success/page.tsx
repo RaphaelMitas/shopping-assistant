@@ -8,7 +8,6 @@ import {
 import {
   CheckEmailDescription,
   GoToVerificationButton,
-  LoginLink,
 } from "./SuccessPageElements";
 import { Suspense } from "react";
 import { LoginLinkWithRedirect } from "@/components/utils/loginLinkWithRedirect";
