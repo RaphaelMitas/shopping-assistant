@@ -20,6 +20,7 @@
     "@ai-sdk/react": "^2.0.48",
     "@convex-dev/agent": "^0.2.10",
     "@convex-dev/better-auth": "^0.8.6",
+    "@convex-dev/rate-limiter": "^0.2.13",
     "@convex-dev/resend": "^0.1.13",
     "@hookform/resolvers": "^5.2.2",
     "@mendable/firecrawl-js": "^4.3.5",

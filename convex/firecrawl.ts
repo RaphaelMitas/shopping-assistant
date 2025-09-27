@@ -21,9 +21,9 @@ const searchWeb = async (query: string) => {
           schema: searchWebResultSchema,
         },
       ],
+      timeout: 120000,
     },
   });
-  console.log("FIRECRAWL RESULT", result);
 
   const resultParsed = searchWebResultSchema.safeParse(
     result.web?.map((item) => ({

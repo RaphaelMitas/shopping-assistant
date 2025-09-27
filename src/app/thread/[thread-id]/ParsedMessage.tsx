@@ -1,9 +1,5 @@
-import { Button } from "@/components/ui/button";
-import { generateObjectSchema, type Choice } from "@/lib/zod/thread";
-import { type UIMessage } from "@convex-dev/agent/react";
-import { api } from "convex/_generated/api";
-import { useMutation } from "convex/react";
-import { DynamicIcon } from "lucide-react/dynamic";
+import { generateObjectSchema } from "@/lib/zod/thread";
+import { useSmoothText, type UIMessage } from "@convex-dev/agent/react";
 import ChoiceButtons from "./ChoiceButtons";
 import WebResultCarousel from "./WebResultCarousel";
 
@@ -34,6 +30,7 @@ const ParsedMessage = ({
   threadId: string;
 }) => {
   const { object, textMessage } = parseMessage(message);
+  const [smoothTextMessage] = useSmoothText(textMessage ?? "");
 
   if (object?.type === "choice") {
     return (
@@ -49,7 +46,7 @@ const ParsedMessage = ({
     return <WebResultCarousel results={object.results} />;
   }
 
-  return <div>{textMessage}</div>;
+  return <div>{smoothTextMessage}</div>;
 };
 
 export default ParsedMessage;
