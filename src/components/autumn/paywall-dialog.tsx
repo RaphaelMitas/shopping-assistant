@@ -65,7 +65,7 @@ export default function PaywallDialog(params?: PaywallDialogProps) {
           {title}
         </DialogTitle>
         <div className="my-2 px-6">{message}</div>
-        <DialogFooter className="bg-secondary mt-4 flex flex-row justify-between gap-x-4 border-t py-2 pr-3 pl-6 sm:flex-row">
+        <DialogFooter className="bg-muted mt-4 flex flex-row justify-between gap-x-4 border-t py-2 pr-3 pl-6 sm:flex-row">
           <Button
             size="sm"
             className="min-w-20 font-medium shadow transition"

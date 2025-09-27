@@ -225,7 +225,7 @@ export const PricingCard = ({
       className={cn(
         "text-foreground h-full w-full max-w-xl rounded-lg border py-6 shadow-sm",
         isRecommended &&
-          "bg-secondary/40 lg:h-[calc(100%+48px)] lg:-translate-y-6 lg:shadow-lg dark:shadow-zinc-800/80",
+          "bg-muted/40 lg:h-[calc(100%+48px)] lg:-translate-y-6 lg:shadow-lg dark:shadow-zinc-800/80",
         className,
       )}
     >
@@ -251,7 +251,7 @@ export const PricingCard = ({
               )}
             </div>
             <div className="mb-2">
-              <h3 className="bg-secondary/40 mb-4 flex h-16 items-center border-y px-6 font-semibold">
+              <h3 className="bg-primary/40 mb-4 flex h-16 items-center border-y px-6 font-semibold">
                 <div className="line-clamp-2">
                   {mainPriceDisplay?.primary_text}{" "}
                   {mainPriceDisplay?.secondary_text && (
@@ -355,7 +355,7 @@ export const PricingCardButton = React.forwardRef<
         className,
       )}
       {...props}
-      variant={recommended ? "default" : "secondary"}
+      variant={recommended ? "secondary" : "default"}
       ref={ref}
       disabled={loading || props.disabled}
       onClick={handleClick}
@@ -402,7 +402,7 @@ export const AnnualSwitch = ({
 
 export const RecommendedBadge = ({ recommended }: { recommended: string }) => {
   return (
-    <div className="bg-secondary text-muted-foreground absolute top-[-1px] right-[-1px] rounded-bl-lg border px-3 text-sm font-medium lg:top-4 lg:right-4 lg:rounded-full lg:py-0.5">
+    <div className="bg-secondary text-muted absolute top-[-1px] right-[-1px] rounded-bl-lg border px-3 text-sm font-medium lg:top-4 lg:right-4 lg:rounded-full lg:py-0.5">
       {recommended}
     </div>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Handbag, LifeBuoy, Send } from "lucide-react";
+import { LifeBuoy, Send } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
 import { NavSecondary } from "@/components/nav-secondary";
@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/sidebar";
 import type { ComponentProps } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 const data: {
   navSecondary: ComponentProps<typeof NavSecondary>["items"];
@@ -43,9 +44,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href="/">
-                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <Handbag className="size-4" />
-                </div>
+                <Image
+                  src="/favicons/favicon.svg"
+                  alt="Shopping Assistant"
+                  width={32}
+                  height={32}
+                />
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">
                     Shopping Assistant

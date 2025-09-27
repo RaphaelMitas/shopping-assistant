@@ -18,11 +18,11 @@ const productDetails: ProductDetails[] = [
       primaryText: "$4,99",
       secondaryText: "/month",
     },
-    recommendText: "Most Popular",
   },
   {
     id: "premium",
     description: "For those of you who are really serious",
+    recommendText: "Best Value",
     price: {
       primaryText: "$9,99",
       secondaryText: "/month",

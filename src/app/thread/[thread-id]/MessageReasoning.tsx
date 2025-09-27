@@ -29,7 +29,6 @@ const MessageReasoning = ({ message }: { message: UIMessage }) => {
       startStreaming: message.status === "streaming",
     },
   );
-  console.log("message reasoning", message.parts);
 
   if (message.role !== "assistant") {
     return null;

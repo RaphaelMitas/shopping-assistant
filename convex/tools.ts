@@ -64,7 +64,7 @@ export const firecrawlSearchWebTool = createTool({
 
     await autumn.track(ctx, {
       featureId: "ai_tokens",
-      value: result.length * 5,
+      value: result.length * 10,
       properties: {
         type: "searchWebTool",
       },

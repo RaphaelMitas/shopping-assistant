@@ -2,7 +2,6 @@ import { openai } from "@ai-sdk/openai";
 import { components, internal } from "./_generated/api";
 import {
   Agent,
-  DeltaStreamer,
   listUIMessages,
   syncStreams,
   vStreamArgs,

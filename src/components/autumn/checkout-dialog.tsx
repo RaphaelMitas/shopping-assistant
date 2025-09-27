@@ -87,7 +87,7 @@ export default function CheckoutDialog(params: CheckoutDialogProps) {
           />
         )}
 
-        <DialogFooter className="bg-secondary flex flex-col justify-between gap-x-4 border-t py-2 pr-3 pl-6 shadow-inner sm:flex-row">
+        <DialogFooter className="bg-muted flex flex-col justify-between gap-x-4 border-t py-2 pr-3 pl-6 shadow-inner sm:flex-row">
           <Button
             size="sm"
             onClick={async () => {

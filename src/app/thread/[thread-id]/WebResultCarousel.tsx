@@ -52,8 +52,8 @@ const WebResultCarousel = ({ results }: { results: SearchWebResult }) => {
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious />
-        <CarouselNext />
+        <CarouselPrevious variant={"default"} />
+        <CarouselNext variant={"default"} />
       </Carousel>
     </div>
   );
