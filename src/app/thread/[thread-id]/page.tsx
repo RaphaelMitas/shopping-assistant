@@ -36,6 +36,11 @@ import { useUIMessages } from "@convex-dev/agent/react";
 import ParsedMessage from "./ParsedMessage";
 import { useCustomer } from "autumn-js/react";
 import PaywallDialog from "@/components/autumn/paywall-dialog";
+import {
+  Reasoning,
+  ReasoningContent,
+  ReasoningTrigger,
+} from "@/components/ai-elements/reasoning";
 
 export default function ThreadChatPage() {
   const params = useParams<{ "thread-id": string }>();
@@ -53,7 +58,6 @@ export default function ThreadChatPage() {
   initialQueryRef.current ??= searchParams.get("q");
   const sendMessageToAgent = useMutation(api.threads.sendMessageToAgent);
   const { check } = useCustomer();
-
   const submitTextMessage = useCallback(
     (text: string) => {
       const { data, error } = check({

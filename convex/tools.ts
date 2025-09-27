@@ -96,7 +96,7 @@ export const objectCreatorTool = createTool({
     await autumn.track(ctx, {
       featureId: "ai_tokens",
       value: response.usage?.totalTokens
-        ? Math.ceil(response.usage.totalTokens / 100)
+        ? Math.ceil(response.usage.totalTokens / 1000)
         : undefined,
       properties: {
         type: "objectCreatorTool",

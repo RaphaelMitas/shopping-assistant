@@ -2,6 +2,7 @@ import { openai } from "@ai-sdk/openai";
 import { components, internal } from "./_generated/api";
 import {
   Agent,
+  DeltaStreamer,
   listUIMessages,
   syncStreams,
   vStreamArgs,
@@ -18,22 +19,29 @@ import { authComponent } from "./auth";
 import { paginationOptsValidator } from "convex/server";
 import { autumn } from "./autumn";
 import { objectCreatorTool, firecrawlSearchWebTool } from "./tools";
+import { rawRequestResponseHandler } from "./debugging/rawRequestResponseHandler";
 
 export const agent = new Agent(components.agent, {
   usageHandler: async (ctx, data) => {
     const totalTokens = data.usage.totalTokens;
     await autumn.track(ctx, {
       featureId: "ai_tokens",
-      value: totalTokens ? Math.ceil(totalTokens / 100) : undefined,
+      value: totalTokens ? Math.ceil(totalTokens / 1000) : undefined,
       properties: {
         threadId: data.threadId,
         type: "agent-gpt-5",
       },
     });
   },
+  rawRequestResponseHandler,
   name: "Shopping Assistant Agent",
-  languageModel: openai.chat("gpt-5"),
-  // textEmbeddingModel: openai.textEmbedding("text-embedding-3-small"),
+  languageModel: openai("gpt-5"),
+  textEmbeddingModel: openai.textEmbedding("text-embedding-3-small"),
+  providerOptions: {
+    openai: {
+      reasoningSummary: "auto", // 'auto' for condensed or 'detailed' for comprehensive
+    },
+  },
   instructions: `
     You are a **shopping assistant**.  
     Your goal is to help the user find the right product.
@@ -210,19 +218,15 @@ export const sendMessageToAgentAsync = internalAction({
     const { thread } = await agent.continueThread(scopedCtx, { threadId });
     await thread.updateMetadata({ title: "Shopping Assistant" });
 
-    await thread
-      .streamText(
-        {
-          promptMessageId,
-        },
-        {
-          contextOptions: { excludeToolMessages: false },
-          saveStreamDeltas: true,
-        },
-      )
-      .catch((error) => {
-        console.error("ERROR", error);
-      });
+    await thread.streamText(
+      {
+        promptMessageId,
+      },
+      {
+        contextOptions: { excludeToolMessages: false },
+        saveStreamDeltas: true,
+      },
+    );
   },
 });
 
