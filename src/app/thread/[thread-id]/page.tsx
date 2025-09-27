@@ -29,18 +29,13 @@ import {
   PromptInputActionAddAttachments,
 } from "@/components/ai-elements/prompt-input";
 import { cn } from "@/lib/utils";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "convex/_generated/api";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useUIMessages } from "@convex-dev/agent/react";
 import ParsedMessage from "./ParsedMessage";
 import { useCustomer } from "autumn-js/react";
 import PaywallDialog from "@/components/autumn/paywall-dialog";
-import {
-  Reasoning,
-  ReasoningContent,
-  ReasoningTrigger,
-} from "@/components/ai-elements/reasoning";
 
 export default function ThreadChatPage() {
   const params = useParams<{ "thread-id": string }>();
@@ -58,6 +53,8 @@ export default function ThreadChatPage() {
   initialQueryRef.current ??= searchParams.get("q");
   const sendMessageToAgent = useMutation(api.threads.sendMessageToAgent);
   const { check } = useCustomer();
+  const user = useQuery(api.users.getCurrentUser);
+
   const submitTextMessage = useCallback(
     (text: string) => {
       const { data, error } = check({
@@ -120,12 +117,21 @@ export default function ThreadChatPage() {
           />
         ) : (
           <ConversationContent>
+            <ConversationScrollButton />
             {messages.results
               ?.map((m, index) => (
                 <Message key={`${m.id}-${index}`} from={m.role}>
                   <MessageAvatar
-                    src=""
-                    name={m.role === "user" ? "You" : "AI"}
+                    src={
+                      m.role === "user"
+                        ? (user?.image ?? "")
+                        : "/favicons/favicon.svg"
+                    }
+                    name={
+                      m.role === "user"
+                        ? (user?.name ?? "You")
+                        : "Shopping Assistant"
+                    }
                   />
                   <MessageContent className="max-w-[75%]">
                     <ParsedMessage message={m} threadId={threadId} />

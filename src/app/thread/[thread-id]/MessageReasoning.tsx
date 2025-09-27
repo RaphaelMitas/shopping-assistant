@@ -6,10 +6,8 @@ import {
 } from "@/components/ai-elements/reasoning";
 import type { UIMessage } from "@convex-dev/agent/react";
 import { useSmoothText } from "@convex-dev/agent/react";
-import { useState } from "react";
 
 const MessageReasoning = ({ message }: { message: UIMessage }) => {
-  const [open, setOpen] = useState(message.status === "streaming");
   const [reasoningText] = useSmoothText(
     message.parts
       .filter(
@@ -35,8 +33,12 @@ const MessageReasoning = ({ message }: { message: UIMessage }) => {
   }
 
   return (
-    <Reasoning className="w-full" isStreaming={false} open={open}>
-      <ReasoningTrigger onClick={() => setOpen(!open)} />
+    <Reasoning
+      className="w-full"
+      isStreaming={message.status === "streaming"}
+      defaultOpen={message.status === "streaming"}
+    >
+      <ReasoningTrigger />
       <ReasoningContent>{reasoningText}</ReasoningContent>
     </Reasoning>
   );
