@@ -234,6 +234,18 @@ export const sendMessageToAgentAsync = internalAction({
 //   handler: sendMessageToAgentHandler,
 // });
 
+export const isThreadAvailable = query({
+  args: { threadId: v.string() },
+  handler: async (ctx, args) => {
+    try {
+      await authorizeThreadAccess(ctx, args);
+    } catch {
+      return false;
+    }
+    return true;
+  },
+});
+
 export const getThreadMessages = query({
   args: {
     threadId: v.string(),
