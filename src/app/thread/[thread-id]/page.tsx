@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { ChatStatus } from "ai";
+import type { ChatStatus, FileUIPart } from "ai";
 
 import {
   Conversation,
@@ -27,6 +27,7 @@ import {
   PromptInputActionMenuTrigger,
   PromptInputActionMenuContent,
   PromptInputActionAddAttachments,
+  PromptInputButton,
 } from "@/components/ai-elements/prompt-input";
 import { cn } from "@/lib/utils";
 import { useMutation, useQuery } from "convex/react";
@@ -36,6 +37,7 @@ import { useUIMessages } from "@convex-dev/agent/react";
 import ParsedMessage from "./ParsedMessage";
 import { useCustomer } from "autumn-js/react";
 import PaywallDialog from "@/components/autumn/paywall-dialog";
+import { Button } from "@/components/ui/button";
 
 export default function ThreadChatPage() {
   const params = useParams<{ "thread-id": string }>();
@@ -82,7 +84,10 @@ export default function ThreadChatPage() {
   );
 
   const handleSubmit = useCallback(
-    (message: { text?: string }, event: React.FormEvent<HTMLFormElement>) => {
+    (
+      message: { text?: string; files?: FileUIPart[] },
+      event: React.FormEvent<HTMLFormElement>,
+    ) => {
       const text = (message.text ?? "").trim();
       if (!text) return;
 
@@ -110,14 +115,28 @@ export default function ThreadChatPage() {
       )}
     >
       <Conversation>
-        {messages?.results.reverse().length === 0 ? (
+        {messages.results.reverse().length === 0 ? (
           <ConversationEmptyState
-            title="No messages yet"
-            description="Ask anything about what you want to buy."
+            title={messages.isLoading ? "Loading..." : "No messages yet"}
+            description={
+              messages.isLoading
+                ? "Please wait while we load the messages."
+                : "Ask anything about what you want to buy."
+            }
           />
         ) : (
           <ConversationContent>
-            <ConversationScrollButton />
+            {messages.status === "CanLoadMore" && (
+              <Button
+                className="m-auto"
+                disabled={messages.isLoading}
+                onClick={() => {
+                  messages.loadMore(10);
+                }}
+              >
+                Load More
+              </Button>
+            )}
             {messages.results
               ?.map((m, index) => (
                 <Message key={`${m.id}-${index}`} from={m.role}>
@@ -161,9 +180,10 @@ export default function ThreadChatPage() {
                   </PromptInputActionMenuContent>
                 </PromptInputActionMenu>
               </PromptInputTools>
+
               <PromptInputSubmit
                 status={status}
-                disabled={status !== "ready"}
+                disabled={status !== "ready" || messages.isLoading}
               />
             </PromptInputToolbar>
           </PromptInputBody>
