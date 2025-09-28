@@ -2,7 +2,9 @@ import { openai } from "@ai-sdk/openai";
 import { components, internal } from "./_generated/api";
 import {
   Agent,
+  getFile,
   listUIMessages,
+  storeFile,
   syncStreams,
   vStreamArgs,
 } from "@convex-dev/agent";
@@ -12,6 +14,7 @@ import {
   type MutationCtx,
   type GenericCtx,
   internalAction,
+  action,
 } from "./_generated/server";
 import { v } from "convex/values";
 import { authComponent } from "./auth";
@@ -19,6 +22,7 @@ import { paginationOptsValidator } from "convex/server";
 import { autumn } from "./autumn";
 import { objectCreatorTool, firecrawlSearchWebTool } from "./tools";
 import { rawRequestResponseHandler } from "./debugging/rawRequestResponseHandler";
+import { UserModelMessage } from "ai";
 
 export const agent = new Agent(components.agent, {
   usageHandler: async (ctx, data) => {
@@ -160,7 +164,11 @@ export const createThread = mutation({
 });
 
 export const sendMessageToAgent = mutation({
-  args: { threadId: v.string(), message: v.string() },
+  args: {
+    threadId: v.string(),
+    message: v.string(),
+    fileIds: v.optional(v.array(v.string())),
+  },
   handler: async (ctx, args) => {
     const user = await authComponent.safeGetAuthUser(ctx);
     const thread = await agent.getThreadMetadata(ctx, args);
@@ -168,10 +176,23 @@ export const sendMessageToAgent = mutation({
     if (!user || thread.userId !== user?._id) {
       throw new Error("You are not authorized to access this thread");
     }
+    const tasks = args.fileIds?.map(async (fileId) => {
+      return await getFile(ctx, components.agent, fileId);
+    });
+    const fileParts = tasks ? await Promise.all(tasks) : undefined;
+
+    const message: UserModelMessage = {
+      role: "user",
+      content: [
+        ...(fileParts?.map((filePart) => filePart.filePart) ?? []),
+        { type: "text", text: args.message },
+      ],
+    };
 
     const { messageId } = await agent.saveMessage(ctx, {
       threadId: args.threadId,
-      prompt: args.message,
+      // prompt: args.message,
+      message,
       // we're in a mutation, so skip embeddings for now. They'll be generated
       // lazily when streaming text.
       skipEmbeddings: true,
@@ -181,6 +202,36 @@ export const sendMessageToAgent = mutation({
       promptMessageId: messageId,
       userId: user._id,
     });
+  },
+});
+
+export const uploadFile = action({
+  args: {
+    filename: v.string(),
+    mimeType: v.string(),
+    bytes: v.bytes(),
+    sha256: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+    // Note: we're using storeFile which will store the file in file storage
+    // or re-use an existing file with the same hash and track references.
+    const {
+      file: { fileId, url },
+    } = await storeFile(
+      ctx,
+      components.agent,
+      new Blob([args.bytes], { type: args.mimeType }),
+      {
+        filename: args.filename,
+        sha256: args.sha256,
+      },
+    );
+    return { fileId, url };
   },
 });
 

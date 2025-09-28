@@ -27,10 +27,9 @@ import {
   PromptInputActionMenuTrigger,
   PromptInputActionMenuContent,
   PromptInputActionAddAttachments,
-  PromptInputButton,
 } from "@/components/ai-elements/prompt-input";
 import { cn } from "@/lib/utils";
-import { useMutation, useQuery } from "convex/react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import { api } from "convex/_generated/api";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useUIMessages } from "@convex-dev/agent/react";
@@ -49,6 +48,7 @@ export default function ThreadChatPage() {
     { initialNumItems: 10, stream: true },
   );
   const [status, setStatus] = useState<ChatStatus>("ready");
+  const [isUploading, setIsUploading] = useState<boolean>(false);
   const router = useRouter();
   const didSendInitialRef = useRef(false);
   const initialQueryRef = useRef<string | null>(null);
@@ -56,9 +56,10 @@ export default function ThreadChatPage() {
   const sendMessageToAgent = useMutation(api.threads.sendMessageToAgent);
   const { check } = useCustomer();
   const user = useQuery(api.users.getCurrentUser);
+  const uploadFile = useAction(api.threads.uploadFile);
 
   const submitTextMessage = useCallback(
-    (text: string) => {
+    (text: string, fileIds?: string[]) => {
       const { data, error } = check({
         featureId: "ai_tokens",
         dialog: PaywallDialog,
@@ -72,7 +73,7 @@ export default function ThreadChatPage() {
         return;
       }
       setStatus("submitted");
-      sendMessageToAgent({ threadId, message: text })
+      sendMessageToAgent({ threadId, message: text, fileIds })
         .catch(() => {
           setStatus("error");
         })
@@ -84,17 +85,56 @@ export default function ThreadChatPage() {
   );
 
   const handleSubmit = useCallback(
-    (
+    async (
       message: { text?: string; files?: FileUIPart[] },
       event: React.FormEvent<HTMLFormElement>,
     ) => {
+      const formEl = event.currentTarget;
       const text = (message.text ?? "").trim();
       if (!text) return;
 
-      event.currentTarget.reset();
-      submitTextMessage(text);
+      const uploadable = (message.files ?? []).filter(
+        (f) => f.type === "file" && !!f.url,
+      );
+      let fileIds: string[] | undefined = undefined;
+
+      if (uploadable.length > 0) {
+        setIsUploading(true);
+        const tasks = uploadable.map(async (f) => {
+          const url = f.url;
+          const response = await fetch(url);
+          const blob = await response.blob();
+          const bytes = await blob.arrayBuffer();
+          return await uploadFile({
+            bytes,
+            filename: f.filename ?? "unknown",
+            mimeType: f.mediaType,
+          });
+        });
+
+        const settled = await Promise.allSettled(tasks);
+        setIsUploading(false);
+        if (settled.some((s) => s.status === "rejected")) {
+          const firstError = settled.find((s) => s.status === "rejected");
+          const errorMessage =
+            firstError?.reason instanceof Error
+              ? firstError.reason.message
+              : "File upload failed";
+          console.error(errorMessage);
+          setStatus("error");
+          return;
+        }
+
+        fileIds = settled
+          .map((s) => (s.status === "fulfilled" ? s.value?.fileId : null))
+          .filter((f) => f !== null);
+      }
+      console.log(fileIds);
+
+      formEl.reset();
+      submitTextMessage(text, fileIds);
     },
-    [submitTextMessage],
+    [submitTextMessage, uploadFile],
   );
 
   useEffect(() => {

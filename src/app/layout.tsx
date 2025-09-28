@@ -1,7 +1,7 @@
 import "@/styles/globals.css";
 
 import { type Metadata } from "next";
-import { Geist, Inter } from "next/font/google";
+import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import type { ReactNode } from "react";
 import { ConvexClientProvider } from "./ConvexClientProvider";
