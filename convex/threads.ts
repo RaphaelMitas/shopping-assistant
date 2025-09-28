@@ -22,7 +22,7 @@ import { paginationOptsValidator } from "convex/server";
 import { autumn } from "./autumn";
 import { objectCreatorTool, firecrawlSearchWebTool } from "./tools";
 import { rawRequestResponseHandler } from "./debugging/rawRequestResponseHandler";
-import { UserModelMessage } from "ai";
+import { type UserModelMessage } from "ai";
 
 export const agent = new Agent(components.agent, {
   usageHandler: async (ctx, data) => {

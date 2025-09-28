@@ -48,7 +48,6 @@ export default function ThreadChatPage() {
     { initialNumItems: 10, stream: true },
   );
   const [status, setStatus] = useState<ChatStatus>("ready");
-  const [isUploading, setIsUploading] = useState<boolean>(false);
   const router = useRouter();
   const didSendInitialRef = useRef(false);
   const initialQueryRef = useRef<string | null>(null);
@@ -99,7 +98,6 @@ export default function ThreadChatPage() {
       let fileIds: string[] | undefined = undefined;
 
       if (uploadable.length > 0) {
-        setIsUploading(true);
         const tasks = uploadable.map(async (f) => {
           const url = f.url;
           const response = await fetch(url);
@@ -113,7 +111,7 @@ export default function ThreadChatPage() {
         });
 
         const settled = await Promise.allSettled(tasks);
-        setIsUploading(false);
+
         if (settled.some((s) => s.status === "rejected")) {
           const firstError = settled.find((s) => s.status === "rejected");
           const errorMessage =
