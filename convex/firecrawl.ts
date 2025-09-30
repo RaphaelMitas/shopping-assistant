@@ -1,15 +1,29 @@
 "use node";
 import { Firecrawl } from "@mendable/firecrawl-js";
-import { internalAction } from "./_generated/server";
+import { action, internalAction } from "./_generated/server";
 import { v } from "convex/values";
-import { searchWebResultSchema } from "../src/lib/zod/thread";
+import {
+  searchWebItemSchema,
+  searchWebResultSchema,
+} from "../src/lib/zod/thread";
 
 const apiKey = process.env.FIRECRAWL_API_KEY!;
 
 const firecrawl = new Firecrawl({ apiKey });
 
+type FirecrawlResult = {
+  web: {
+    json?: {
+      url?: string;
+      title?: string;
+      description?: string;
+      screenshot?: string;
+    };
+  }[];
+};
+
 const searchWeb = async (query: string) => {
-  const result = await firecrawl.search(query, {
+  const result = (await firecrawl.search(query, {
     limit: 3,
     sources: ["web"],
     scrapeOptions: {
@@ -18,27 +32,19 @@ const searchWeb = async (query: string) => {
         "screenshot",
         {
           type: "json",
-          schema: searchWebResultSchema,
+          schema: searchWebItemSchema,
         },
       ],
-      fastMode: true,
       timeout: 60000,
     },
-  });
+  })) as unknown as FirecrawlResult;
 
   const resultParsed = searchWebResultSchema.safeParse(
     result.web?.map((item) => ({
-      url: typeof item === "object" && "url" in item ? (item.url ?? "") : "",
-      title:
-        typeof item === "object" && "title" in item ? (item.title ?? "") : "",
-      description:
-        typeof item === "object" && "description" in item
-          ? (item.description ?? "")
-          : "",
-      screenshot:
-        typeof item === "object" && "screenshot" in item
-          ? (item.screenshot ?? "")
-          : "",
+      url: item.json?.url ?? "",
+      title: item.json?.title ?? "",
+      description: item.json?.description ?? "",
+      screenshot: item.json?.screenshot ?? "",
     })) ?? [],
   );
 
@@ -51,10 +57,10 @@ export const searchWebAction = internalAction({
   },
   returns: v.array(
     v.object({
-      url: v.string(),
-      title: v.string(),
-      description: v.string(),
-      screenshot: v.string(),
+      url: v.optional(v.string()),
+      title: v.optional(v.string()),
+      description: v.optional(v.string()),
+      screenshot: v.optional(v.string()),
     }),
   ),
   handler: async (ctx, args) => {
