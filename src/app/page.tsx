@@ -6,6 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import Image from "next/image";
 
 export default function HomePage() {
   return (
@@ -43,10 +44,13 @@ export default function HomePage() {
                 aria-label="Product preview placeholder"
                 className="bg-muted relative aspect-video w-full rounded-xl border shadow-md"
               >
-                <div className="absolute inset-0 grid grid-cols-3 gap-2 p-3">
-                  <div className="bg-background/60 rounded" />
-                  <div className="bg-background/60 rounded" />
-                  <div className="bg-background/60 rounded" />
+                <div className="absolute inset-0 m-3 grid grid-cols-3 gap-2">
+                  <Image
+                    className="rounded-md"
+                    src="/showcase/chat.png"
+                    alt="Product preview"
+                    fill
+                  />
                 </div>
               </div>
             </div>
@@ -143,12 +147,15 @@ export default function HomePage() {
               <div
                 role="img"
                 aria-label="Web results preview placeholder"
-                className="bg-muted relative aspect-[4/3] w-full rounded-xl border shadow-md"
+                className="bg-muted relative aspect-[780/1060] w-full rounded-xl border shadow-md"
               >
-                <div className="absolute inset-0 grid grid-rows-3 gap-2 p-3">
-                  <div className="bg-background/60 rounded" />
-                  <div className="bg-background/60 rounded" />
-                  <div className="bg-background/60 rounded" />
+                <div className="absolute inset-0 m-3 grid grid-rows-3 gap-2">
+                  <Image
+                    className="rounded-md"
+                    src="/showcase/lipstick2.png"
+                    alt="Product preview"
+                    fill
+                  />
                 </div>
               </div>
             </div>
