@@ -13,6 +13,7 @@ import CheckoutDialog from "@/components/autumn/checkout-dialog";
 import { getPricingTableContent } from "@/lib/autumn/pricing-table-content";
 import type { Product, ProductItem } from "autumn-js";
 import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function PricingTable({
   productDetails,
@@ -20,6 +21,7 @@ export default function PricingTable({
   productDetails?: ProductDetails[];
 }) {
   const { customer, checkout } = useCustomer({ errorOnNotFound: false });
+  const router = useRouter();
 
   const [isAnnual, setIsAnnual] = useState(false);
   const { products, isLoading, error } = usePricingTable({ productDetails });
@@ -87,6 +89,10 @@ export default function PricingTable({
                     });
                   } else if (product.display?.button_url) {
                     window.open(product.display?.button_url, "_blank");
+                  } else {
+                    router.push(
+                      `/login?redirect_to=${encodeURIComponent("/pricing")}`,
+                    );
                   }
                 },
               }}

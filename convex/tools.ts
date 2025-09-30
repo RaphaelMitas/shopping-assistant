@@ -30,7 +30,11 @@ export const firecrawlSearchWebTool = createTool({
   description:
     "This is the Firecrawl search web tool. Search the web for information. Return the results in the searchWebResultSchema.",
   args: z.object({
-    query: z.string().describe("The query to search for the shopping item"),
+    query: z
+      .string()
+      .describe(
+        "The query to search for the shopping item. Make it short and concise.",
+      ),
   }),
   handler: async (ctx, args, _options) => {
     let rateLimitData = await firecrawlRateLimiter.check(ctx, "sendMessage");
@@ -88,7 +92,8 @@ export const objectCreatorTool = createTool({
       model: openai.chat("gpt-5-mini"),
       system: `You are an expert in zod. You are given a query and need to convert it to a zod object.
                 Return the object schema in the generateObjectSchema format.
-                If something is not passed, like an icon, use a fitting icon.`,
+                If something is not passed, like an icon, use a fitting icon. 
+                Make sure to use a fitting icon from the lucideIconNames array.`,
       messages: [{ role: "user", content: args.query }],
       schema: generateObjectSchema,
     });

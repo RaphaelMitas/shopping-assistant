@@ -21,7 +21,8 @@ const searchWeb = async (query: string) => {
           schema: searchWebResultSchema,
         },
       ],
-      timeout: 120000,
+      fastMode: true,
+      timeout: 60000,
     },
   });
 

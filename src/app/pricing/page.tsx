@@ -48,7 +48,7 @@ const productDetails: ProductDetails[] = [
 
 export default function PricingPage() {
   return (
-    <div className="m-auto h-full w-full items-center justify-center p-8">
+    <div className="m-auto h-full w-full max-w-7xl items-center justify-center p-8">
       <PricingTable productDetails={productDetails} />
     </div>
   );
