@@ -53,7 +53,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                   <AppSidebar />
 
                   <SidebarInset className="relative">
-                    <SidebarTrigger className="bg-card absolute top-0 left-0 z-10 rounded-t-none rounded-l-none p-6" />
+                    <div className="bg-card absolute top-0 left-0 z-10 rounded-t-none rounded-l-none">
+                      <SidebarTrigger className="rounded-t-none rounded-l-none p-6" />
+                    </div>
                     {children}
                   </SidebarInset>
                 </SidebarProvider>

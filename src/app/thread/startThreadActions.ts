@@ -6,6 +6,11 @@ import { fetchMutation } from "convex/nextjs";
 
 export async function startThread() {
   const token = await getToken();
-  const result = await fetchMutation(api.threads.createThread, {}, { token });
-  return result;
+  if (!token) {
+    return { notSignedIn: true };
+  }
+
+  return {
+    threadId: await fetchMutation(api.threads.createThread, {}, { token }),
+  };
 }

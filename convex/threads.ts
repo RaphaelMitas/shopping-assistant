@@ -22,7 +22,7 @@ import { paginationOptsValidator } from "convex/server";
 import { autumn } from "./autumn";
 import { objectCreatorTool, firecrawlSearchWebTool } from "./tools";
 import { rawRequestResponseHandler } from "./debugging/rawRequestResponseHandler";
-import { type UserModelMessage } from "ai";
+import { generateText, type UserModelMessage } from "ai";
 
 export const agent = new Agent(components.agent, {
   usageHandler: async (ctx, data) => {
@@ -51,6 +51,7 @@ export const agent = new Agent(components.agent, {
 
     1. **Conversation flow**  
       - First, ask the user for details about what they want to buy.  
+      - Critically, ask for the user's location or delivery destination (country/region) early. If unknown, ask it before searching. Use location to filter availability, pricing, and shipping options.  
       - Always ask *only one question at a time*.  
       - Keep answers short and clear, like in a quiz.  
       - Use the 'icon' field in choices to display an icon along with each label.  
@@ -58,6 +59,7 @@ export const agent = new Agent(components.agent, {
 
     2. **Using tools**  
       - Once you have enough information, you **MUST CALL** the 'firecrawlSearchWebTool' function to find products. Use it only once per prompt.
+      - Incorporate the user's stated location in your search queries and prefer sources that reflect local availability or region-specific pricing.  
       - This tool returns a list of websites.  
       - Prefer using this tool over guessing — if you're not sure, ask one clarifying question before calling it.  
 
@@ -201,6 +203,7 @@ export const sendMessageToAgent = mutation({
       threadId: args.threadId,
       promptMessageId: messageId,
       userId: user._id,
+      promptText: args.message,
     });
   },
 });
@@ -240,8 +243,9 @@ export const sendMessageToAgentAsync = internalAction({
     promptMessageId: v.string(),
     threadId: v.string(),
     userId: v.string(),
+    promptText: v.string(),
   },
-  handler: async (ctx, { promptMessageId, threadId, userId }) => {
+  handler: async (ctx, { promptMessageId, threadId, userId, promptText }) => {
     const scopedCtx = {
       ...ctx,
       // If your auth layer exposes a helper to fetch by ID, use that directly.
@@ -266,8 +270,22 @@ export const sendMessageToAgentAsync = internalAction({
     }
 
     const { thread } = await agent.continueThread(scopedCtx, { threadId });
-    await thread.updateMetadata({ title: "Shopping Assistant" });
 
+    const metadata = await thread.getMetadata();
+
+    if (!metadata.title) {
+      const { text } = await generateText({
+        model: openai("gpt-5"),
+        system:
+          "You create short, descriptive chat thread titles. Respond with only the title, no quotes.",
+        prompt: `Create a concise title (max 30 characters) for this first user message. Avoid ending punctuation and quotes.\n\nMessage: ${promptText}`,
+      }).catch((error) => {
+        console.error(error);
+        return { text: "Shopping Assistant" };
+      });
+
+      await thread.updateMetadata({ title: text });
+    }
     await thread.streamText(
       {
         promptMessageId,

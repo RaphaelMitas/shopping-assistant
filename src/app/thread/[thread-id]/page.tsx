@@ -37,6 +37,7 @@ import ParsedMessage from "./ParsedMessage";
 import { useCustomer } from "autumn-js/react";
 import PaywallDialog from "@/components/autumn/paywall-dialog";
 import { Button } from "@/components/ui/button";
+import { LoaderCircle } from "lucide-react";
 
 export default function ThreadChatPage() {
   const params = useParams<{ "thread-id": string }>();
@@ -164,16 +165,22 @@ export default function ThreadChatPage() {
           />
         ) : (
           <ConversationContent>
-            {messages.status === "CanLoadMore" && (
-              <Button
-                className="m-auto"
-                disabled={messages.isLoading}
-                onClick={() => {
-                  messages.loadMore(10);
-                }}
-              >
-                Load More
-              </Button>
+            {(messages.status === "CanLoadMore" ||
+              messages.status === "LoadingMore") && (
+              <div className="flex justify-center">
+                <Button
+                  disabled={messages.status === "LoadingMore"}
+                  onClick={() => {
+                    messages.loadMore(10);
+                  }}
+                >
+                  {messages.status === "LoadingMore" ? (
+                    <LoaderCircle className="size-4 animate-spin" />
+                  ) : (
+                    "Load More"
+                  )}
+                </Button>
+              </div>
             )}
             {messages.results
               ?.map((m, index) => (
@@ -190,7 +197,7 @@ export default function ThreadChatPage() {
                         : "Shopping Assistant"
                     }
                   />
-                  <MessageContent className="max-w-[75%]">
+                  <MessageContent variant="flat" className="max-w-[75%]">
                     <ParsedMessage message={m} threadId={threadId} />
                   </MessageContent>
                 </Message>
