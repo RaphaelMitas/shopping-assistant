@@ -1,10 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { LifeBuoy, Send } from "lucide-react";
+// import { LifeBuoy, Send } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
-import { NavSecondary } from "@/components/nav-secondary";
+// import { NavSecondary } from "@/components/nav-secondary";
 import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
@@ -15,26 +15,26 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import type { ComponentProps } from "react";
+// import type { ComponentProps } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
-const data: {
-  navSecondary: ComponentProps<typeof NavSecondary>["items"];
-} = {
-  navSecondary: [
-    {
-      title: "Support",
-      url: "#",
-      icon: LifeBuoy,
-    },
-    {
-      title: "Feedback",
-      url: "#",
-      icon: Send,
-    },
-  ],
-};
+// const data: {
+//   navSecondary: ComponentProps<typeof NavSecondary>["items"];
+// } = {
+//   navSecondary: [
+//     {
+//       title: "Support",
+//       url: "#",
+//       icon: LifeBuoy,
+//     },
+//     {
+//       title: "Feedback",
+//       url: "#",
+//       icon: Send,
+//     },
+//   ],
+// };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
